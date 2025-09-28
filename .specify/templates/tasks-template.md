@@ -46,6 +46,7 @@
 - [ ] T001 Create project structure per implementation plan
 - [ ] T002 Initialize [language] project with [framework] dependencies
 - [ ] T003 [P] Configure linting and formatting tools
+- [ ] T004 Prefer official CLI scaffolding for boilerplate (e.g., `ng generate`, `dotnet new`). Record exact commands in the plan.
 
 **Environment & Deployment Setup**
 - [ ] Create environment-specific deployment files (e.g., `docker-compose.dev.yml`,
@@ -56,48 +57,48 @@
 - [ ] Ensure CI/CD pipelines use non-conflicting port ranges and do not deploy
       development stacks to production clusters.
 
+**Testing Setup (align with Constitution)**
+- [ ] If frontend = Angular: add and configure Vitest; remove/replace Karma; add npm scripts for `test` and `test:watch` using Vitest.
+- [ ] If backend = .NET: create xUnit test projects (e.g., `dotnet new xunit`), reference SUT projects, and enable Microsoft/.NET native test runner in CI.
+
 ## Phase 3.2: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
 **CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
-- [ ] T004 [P] Contract test POST /api/users in tests/contract/test_users_post.py
-- [ ] T005 [P] Contract test GET /api/users/{id} in tests/contract/test_users_get.py
-- [ ] T006 [P] Integration test user registration in tests/integration/test_registration.py
-- [ ] T007 [P] Integration test auth flow in tests/integration/test_auth.py
+- [ ] T100 [P] Contract tests for each endpoint (one file per endpoint under tests/contract)
+- [ ] T101 [P] Integration tests for primary flows (tests/integration)
+- [ ] T102 [P] Frontend component/service tests (Vitest) and backend unit tests (xUnit) scaffolds
 
 ## Phase 3.3: Core Implementation (ONLY after tests are failing)
-- [ ] T008 [P] User model in src/models/user.py
-- [ ] T009 [P] UserService CRUD in src/services/user_service.py
-- [ ] T010 [P] CLI --create-user in src/cli/user_commands.py
-- [ ] T011 POST /api/users endpoint
-- [ ] T012 GET /api/users/{id} endpoint
-- [ ] T013 Input validation
-- [ ] T014 Error handling and logging
+- [ ] T200 [P] Models/entities
+- [ ] T201 [P] Services/business logic
+- [ ] T202 [P] CLI/commands or endpoints
+- [ ] T203 Input validation
+- [ ] T204 Error handling and logging
 
 ## Phase 3.4: Integration
-- [ ] T015 Connect UserService to DB
-- [ ] T016 Auth middleware
-- [ ] T017 Request/response logging
-- [ ] T018 CORS and security headers
+- [ ] T300 Connect services to infrastructure (DB, queues, etc.)
+- [ ] T301 Auth middleware
+- [ ] T302 Request/response logging
+- [ ] T303 CORS and security headers
 
 ## Phase 3.5: Polish
-- [ ] T019 [P] Unit tests for validation in tests/unit/test_validation.py
-- [ ] T020 Performance tests (OPTIONAL - only when acceptance criteria require performance targets)
-- [ ] T021 [P] Update docs/api.md
-- [ ] T022 Remove duplication
-- [ ] T023 Run manual-testing.md
+- [ ] T400 [P] Unit tests for validation
+- [ ] T401 Performance tests (OPTIONAL - only when acceptance criteria require performance targets)
+- [ ] T402 [P] Update docs (api.md, quickstart.md)
+- [ ] T403 Remove duplication
+- [ ] T404 Manual validation per quickstart.md
 
 ## Dependencies
-- Tests (T004-T007) before implementation (T008-T014)
-- T008 blocks T009, T015
-- T016 blocks T018
-- Implementation before polish (T019-T023)
+- Tests (T100-T102) before implementation (T200-T204)
+- T200 blocks T201, T300
+- T301 blocks T303
+- Implementation before polish (T400-T404)
 
 ## Parallel Example
 ```
-# Launch T004-T007 together:
-Task: "Contract test POST /api/users in tests/contract/test_users_post.py"
-Task: "Contract test GET /api/users/{id} in tests/contract/test_users_get.py"
-Task: "Integration test registration in tests/integration/test_registration.py"
-Task: "Integration test auth in tests/integration/test_auth.py"
+# Launch T100-T102 together (different files):
+Task: "Contract tests for endpoints in tests/contract/*"
+Task: "Integration tests in tests/integration/*"
+Task: "Frontend component/service tests (Vitest) and backend unit tests (xUnit)"
 ```
 
 ## Notes
@@ -136,3 +137,4 @@ Task: "Integration test auth in tests/integration/test_auth.py"
 - [ ] No task modifies same file as another [P] task
 - [ ] Environment-specific deployment configuration provided (dev/prod) and port
       collision avoidance documented
+- [ ] Testing frameworks align with Constitution (Angular → Vitest, .NET → xUnit)

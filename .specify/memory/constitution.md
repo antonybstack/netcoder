@@ -1,16 +1,19 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 → 1.1.0
+- Version change: 1.1.0 → 1.2.0
 - Modified principles / sections:
-  - Added: Environment Configuration (production & development separation)
-  - Clarified: Container-first & Edge TLS Delegation (notes about port and host handling)
-- Added sections:
-  - Environment Configuration & Deployment Constraints
+  - Frontend (Angular 20 & Signals): HTTP Resource API is REQUIRED; RxJS-based HttpClient patterns are prohibited for API handling unless justified in the plan's Constitution Check.
+  - Development Workflow & Quality Gates: Added explicit testing frameworks (Vitest for Angular, xUnit for .NET) and CLI scaffolding policy.
+- Added sections: none
 - Removed sections: none
 - Templates requiring updates:
-  - .specify/templates/plan-template.md ✅ updated (Constitution Check: env config + port conflict gate)
-  - .specify/templates/tasks-template.md ✅ updated (setup tasks: env config guidance)
-  - .specify/templates/spec-template.md ✅ updated (Technical Context: deployment env requirement)
+  - .specify/templates/plan-template.md ✅ updated (gates: Resource API, test frameworks, CLI scaffolding)
+  - .specify/templates/tasks-template.md ✅ updated (setup tasks for Vitest/xUnit; CLI scaffolding)
+  - .specify/templates/spec-template.md ✅ no change required
+- Runtime docs updates:
+  - app/README.md ✅ updated (Vitest replaces Karma)
+- Follow-up TODOs:
+  - TODO(VITEST_MIGRATION): Ensure Angular workspace migrates from Karma to Vitest (packages, config, scripts) and update quickstart accordingly.
 -->
 
 # Netcoder Constitution
@@ -38,12 +41,11 @@ inside containers, and delegates public security to hardened edge services.
 ### III. Frontend: Angular 20 (Zoneless) & Signals
 
 Frontend applications MUST use Angular 20 in zoneless mode and SHOULD prefer the Signals API
-for state management where it provides clear benefits. The project SHOULD avoid adding RxJS
-as a primary reactive model; RxJS usage is permitted only when Signals cannot reasonably
-express the required behavior (document the justification). The project should use the resource API,
-such as the httpResource reactive wrapper around HttpClient that gives you the request status and response
-as signals. You can thus use these signals with computed, effect, linkedSignal, or any other reactive API.
-Because it's built on top of HttpClient, httpResource supports all the same features, such as interceptors.
+for state management where it provides clear benefits. For HTTP and data fetching, the
+Angular Resource API (for example, httpResource built on HttpClient) MUST be used so that
+request state and responses are available as Signals. RxJS MAY be used for non-HTTP reactive
+composition, but RxJS-based HttpClient patterns for API handling are PROHIBITED unless a
+clear, documented justification is provided in the plan's Constitution Check.
 Styling MUST use Tailwind CSS v4 with a dark-mode-first approach. The project MAY adopt well-maintained
 open-source Tailwind libraries to accelerate UI development, but any dependency MUST be verified for stability
 and accessibility. Rationale: reduces runtime overhead, aligns with modern Angular patterns,
@@ -71,11 +73,17 @@ unnecessary engineering overhead.
 ## Technology Stack & Constraints
 
 - Frontend: Angular 20 (zoneless), Signals API preferred; avoid RxJS unless justified.
+- Angular HTTP: Resource API MUST be used for HTTP/data fetching; RxJS patterns for HTTP are
+  prohibited unless justified in the Constitution Check.
 - Styling: Tailwind CSS v4, dark-mode-first; use vetted OSS Tailwind libraries as needed.
 - Backend: .NET 10 (minimal APIs preferred).
 - Deployment model: Containerised (Docker) services; internal traffic MAY be non-HTTPS.
 - Public TLS/HTTP/3: Managed externally (Cloudflare Tunnel or equivalent edge proxy).
 - Networking: Minimise outbound calls; design for batched/efficient communication.
+- Testing: Frontend tests MUST use Vitest; Backend tests MUST use xUnit and Microsoft/.NET
+  native test runner/packages.
+- Scaffolding: Prefer official CLIs for boilerplate and templates (e.g., `ng generate`,
+  `dotnet new`) to ensure up-to-date project structures.
 - Performance testing: OPTIONAL unless explicitly required by feature acceptance criteria.
 
 ## Environment Configuration & Deployment Constraints
@@ -102,13 +110,18 @@ deployments.
 
 - Tests: Unit and integration tests MUST be written and run as part of CI. Contract tests
   MUST be created for public service APIs and MUST fail before implementation (TDD
-  discipline for contract-driven development).
+  discipline for contract-driven development). Frontend tests MUST use Vitest; Backend
+  tests MUST use xUnit and Microsoft/.NET native test packages.
 - Code reviews: All changes MUST go through PRs with at least one approving reviewer.
 - Constitution Check: All plans and specs MUST include a short Constitution Check section
   listing how the proposal conforms to each core principle; violations MUST include a
   documented justification and migration or mitigation plan. The plan MUST include how
   production and development environment configurations are separated and how ports are
   selected to avoid conflicts.
+- Frontend HTTP API handling: Plans that include Angular MUST use the Angular Resource API
+  for HTTP and data fetching. Any RxJS-based HTTP usage MUST be explicitly justified.
+- Scaffolding & Code Generation: Prefer official CLI tools (e.g., `ng generate`, `dotnet new`)
+  for generating templates/boilerplate to stay current with framework best practices.
 - Security: Although internal traffic MAY be non-HTTPS, services MUST validate request
   provenance; secrets MUST be stored using approved secret management solutions.
 - Observability: Structured logs, correlation IDs, and basic metrics MUST be included in
@@ -132,4 +145,4 @@ Versioning policy:
 - MINOR: Addition of new principle(s) or material expansion of guidance.
 - PATCH: Wording clarifications, typo fixes, or non-semantic refinements.
 
-**Version**: 1.1.0 | **Ratified**: 2025-09-27 | **Last Amended**: 2025-09-27
+**Version**: 1.2.0 | **Ratified**: 2025-09-27 | **Last Amended**: 2025-09-28
