@@ -1,0 +1,139 @@
+openapi: 3.0.3
+info:
+  title: C# Playground Run API
+  version: 0.1.0
+  description: Compile and execute user-provided C# source with sandbox constraints.
+servers:
+  - url: http://localhost:5080
+paths:
+  /api/run:
+    post:
+      summary: Compile and execute C# source
+      operationId: runCode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CodeSubmission"
+            examples:
+              hello:
+                value:
+                  language: csharp
+                  source: |
+                    Console.WriteLine("Hello, world!");
+      responses:
+        "200":
+          description: Run result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunResult"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                limited:
+                  value:
+                    code: rate_limited
+                    message: Too many requests. Try again later.
+        "500":
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    CodeSubmission:
+      type: object
+      required: [source, language]
+      properties:
+        source:
+          type: string
+          description: C# 13 source code (top-level statements allowed)
+          maxLength: 262144
+        language:
+          type: string
+          enum: [csharp]
+        options:
+          type: object
+          properties:
+            optimize:
+              type: boolean
+              default: false
+            target:
+              type: string
+              default: ConsoleApp
+            requestId:
+              type: string
+    RunResult:
+      type: object
+      required: [success, phase, stdout, stderr, truncated, durationMs]
+      properties:
+        success:
+          type: boolean
+        phase:
+          type: string
+          enum: [compile, run, timeout, inputNotSupported, oom, error]
+        stdout:
+          type: string
+        stderr:
+          type: string
+        diagnostics:
+          type: array
+          items:
+            $ref: "#/components/schemas/Diagnostic"
+        exception:
+          $ref: "#/components/schemas/ExceptionInfo"
+        truncated:
+          type: boolean
+        durationMs:
+          type: integer
+          format: int64
+        requestId:
+          type: string
+        bytesReturned:
+          type: integer
+          format: int64
+        bytesTotal:
+          type: integer
+          format: int64
+    Diagnostic:
+      type: object
+      properties:
+        message:
+          type: string
+        severity:
+          type: string
+          enum: [info, warning, error]
+        line:
+          type: integer
+        column:
+          type: integer
+    ExceptionInfo:
+      type: object
+      properties:
+        type:
+          type: string
+        message:
+          type: string
+        stack:
+          type: string
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
