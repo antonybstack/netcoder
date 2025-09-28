@@ -47,6 +47,15 @@
 - [ ] T002 Initialize [language] project with [framework] dependencies
 - [ ] T003 [P] Configure linting and formatting tools
 
+**Environment & Deployment Setup**
+- [ ] Create environment-specific deployment files (e.g., `docker-compose.dev.yml`,
+      `docker-compose.prod.yml`) and document host port mappings for development to
+      avoid conflicts with production and CI.
+- [ ] Provide example `.env.example` and document required environment variables for
+      each environment (development, staging, production).
+- [ ] Ensure CI/CD pipelines use non-conflicting port ranges and do not deploy
+      development stacks to production clusters.
+
 ## Phase 3.2: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
 **CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
 - [ ] T004 [P] Contract test POST /api/users in tests/contract/test_users_post.py
@@ -71,7 +80,7 @@
 
 ## Phase 3.5: Polish
 - [ ] T019 [P] Unit tests for validation in tests/unit/test_validation.py
-- [ ] T020 Performance tests (<200ms)
+- [ ] T020 Performance tests (OPTIONAL - only when acceptance criteria require performance targets)
 - [ ] T021 [P] Update docs/api.md
 - [ ] T022 Remove duplication
 - [ ] T023 Run manual-testing.md
@@ -125,3 +134,5 @@ Task: "Integration test auth in tests/integration/test_auth.py"
 - [ ] Parallel tasks truly independent
 - [ ] Each task specifies exact file path
 - [ ] No task modifies same file as another [P] task
+- [ ] Environment-specific deployment configuration provided (dev/prod) and port
+      collision avoidance documented

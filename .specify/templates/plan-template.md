@@ -1,4 +1,3 @@
-
 # Implementation Plan: [FEATURE]
 
 **Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
@@ -46,6 +45,29 @@
 
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+
+The plan MUST include a short, explicit Constitution Check addressing how the proposal
+conforms to each relevant principle in `/.specify/memory/constitution.md`. At minimum the
+following gates apply:
+
+- Runtime & Networking: Document expected network flows; justify any external outbound
+  calls; show how payloads are minimised or batched where appropriate. Internal
+  non-HTTPS operation is acceptable only when the plan explains TLS termination at the
+  edge (Cloudflare Tunnel or equivalent) and describes request provenance validation.
+- Environment configuration: Document separate production and development environment
+  configurations (ports, host bindings, docker-compose overrides or env files). Plans
+  MUST show how development deployments avoid port/host collisions with production and
+  CI, and how health/metrics/admin endpoints are separated or namespaced.
+- Technology Alignment: If the project includes frontend or backend components, the
+  plan MUST state how it aligns with the mandated stack (Frontend: Angular 20 zoneless,
+  Tailwind v4; Backend: .NET 10 minimal APIs) or justify deviations.
+- Observability: Describe logging (structured logs and correlation IDs) and metrics
+  exposure for the feature surface.
+- Styling & UX: Frontend plans MUST adopt dark-mode-first Tailwind v4 styling or
+  document a strong rationale for an alternative.
+- Tests & Quality Gates: Confirm unit and integration tests and any required contract
+  tests; performance testing is OPTIONAL and only required when acceptance criteria
+  specify performance targets.
 
 [Gates determined based on constitution file]
 
