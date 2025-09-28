@@ -1,0 +1,42 @@
+<div class="w-full max-w-sm relative">
+  <!-- Search input -->
+  <label class="input input-bordered flex items-center gap-2 w-full">
+    <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <g
+        stroke-linejoin="round"
+        stroke-linecap="round"
+        stroke-width="2.5"
+        fill="none"
+        stroke="currentColor"
+      >
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.3-4.3"></path>
+      </g>
+    </svg>
+    <input
+      type="search"
+      class="grow"
+      placeholder="Search"
+      [value]="query()"
+      (input)="onInput($event)"
+    />
+    <kbd class="kbd kbd-sm">⌘</kbd>
+    <kbd class="kbd kbd-sm">K</kbd>
+  </label>
+
+  <!-- Scrollable dropdown results (1 column only) -->
+  @if (isOpen() && results().length > 0) {
+  <ul
+    class="bg-base-100 rounded-box mt-2 shadow absolute z-10 w-full max-h-100 overflow-y-auto overflow-x-hidden"
+  >
+    @for(item of results(); track item.title) {
+    <li class="px-3 py-2 hover:bg-base-200 cursor-pointer">
+      <div>
+        <div class="font-medium truncate">{{ item.title }}</div>
+        <div class="text-xs opacity-70 truncate">{{ item.subtitle }}</div>
+      </div>
+    </li>
+    }
+  </ul>
+  }
+</div>
