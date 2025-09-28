@@ -20,55 +20,44 @@ Sync Impact Report
 
 ## Core Principles
 
-### I. Lean Runtime & Minimal Network Overhead
+### I. General
 
-The project MUST prioritise a minimal runtime footprint and minimal network overhead. Services
-MUST avoid unnecessary outbound network calls, limit payload sizes, and prefer efficient
-serialization formats. Designs that introduce chatty protocols or large transfer payloads
-MUST provide a documented justification and an explicit mitigation plan (caching, batching,
-or compression). Rationale: keeping the runtime lean reduces cost, improves reliability in
-container environments, and aligns with the project's expectation of edge TLS termination.
+- The project is CONTAINER-FIRST and MAY operate without embedded HTTPS/TLS inside containers.
+- TLS/SSL termination and public-facing security will be handled by external networking infrastructure (e.g., Cloudflare Tunnel, edge proxy).
+- Rationale: simplifies service runtime, and prevent complexities around certificate management in development and production, as well as avoiding TLS termination overhead in internal traffic.
 
-### II. Container-first & Edge TLS Delegation
+### II. Frontend: Angular 20
 
-The project is CONTAINER-FIRST and MAY operate without embedded HTTPS/TLS inside containers.
-TLS/HTTP/3 termination and public-facing security MUST be handled by external infrastructure
-(e.g., Cloudflare Tunnel, edge proxy). Services MUST validate inbound requests' provenance
-and apply mutual authentication or signed headers where appropriate when running in
-untrusted environments. Rationale: simplifies service runtime, avoids certificate management
-inside containers, and delegates public security to hardened edge services.
+- Frontend applications MUST use Angular 20 in zoneless mode (avoids zone.js).'
+- The Signals API MUST be used for state management.
+- For HTTP and data fetching, the Angular Resource API (for example, httpResource built on HttpClient) MUST be used so that
+- request state and responses are available as Signals.
+- RxJS-based patterns are PROHIBITED unless a clear, documented justification is provided in the plan's Constitution Check.
+- Styling MUST use [tailwind-css](https://www.npmjs.com/package/tailwindcss), ([daisyUI](https://npmjs.com/package/daisyui)), with a dark-mode-first approach.
+- The project MAY adopt well-maintained open-source Tailwind libraries to accelerate UI development, such as [tailwind-css/forms](https://npmjs.com/package/@tailwindcss/forms).
+- Project structure and build MUST follow Angular best practices and conventions.
+- When writing frontend code, reference the project's `.github/instructions/angular.md`.
+- When writing styling code, reference the project's `.github/instructions/daisyui.md`.
 
-### III. Frontend: Angular 20 (Zoneless) & Signals
+### IV. Backend: .NET
 
-Frontend applications MUST use Angular 20 in zoneless mode and SHOULD prefer the Signals API
-for state management where it provides clear benefits. For HTTP and data fetching, the
-Angular Resource API (for example, httpResource built on HttpClient) MUST be used so that
-request state and responses are available as Signals. RxJS MAY be used for non-HTTP reactive
-composition, but RxJS-based HttpClient patterns for API handling are PROHIBITED unless a
-clear, documented justification is provided in the plan's Constitution Check.
-Styling MUST use Tailwind CSS v4 with a dark-mode-first approach. The project MAY adopt well-maintained
-open-source Tailwind libraries to accelerate UI development, but any dependency MUST be verified for stability
-and accessibility. Rationale: reduces runtime overhead, aligns with modern Angular patterns,
-and standardises styling across the product.
+- Backend services MUST be implemented on .NET 10 using controller APIs.
+- Database access MUST use Entity Framework Core.
+- Project structure MUST follow .NET best practices and conventions.
+- When writing backend code, reference the project's `.github/instructions/csharp.md`.
 
-### IV. Backend: .NET 10 Minimal APIs
+### V. Testing
 
-Backend services MUST be implemented on .NET 10 using minimal APIs or equivalent lightweight
-hosting models. Services MUST be easy to run inside Docker without requiring embedded TLS.
-APIs MUST be documented (OpenAPI preferred) and versioned explicitly. Structured logging
-(MUST include correlation IDs) and basic metrics exposure (e.g., Prometheus) are REQUIRED
-for observability. Rationale: .NET 10 provides long-term support and a predictable runtime
-for containerised services while enabling low-overhead hosting.
-
-### V. Simplicity, Testability & Observability
-
-The project values simplicity: designs and implementations MUST favour the simplest solution
-that satisfies requirements. Unit and integration tests MUST be present and maintained. The
-project DOES NOT REQUIRE dedicated performance test suites as a baseline (performance
-testing is OPTIONAL and only required when a feature's acceptance criteria specify
-performance goals). Observability (structured logs, key metrics, and error reporting) MUST
-be implemented for all services. Rationale: ensures quality and debuggability while avoiding
-unnecessary engineering overhead.
+- Only write tests for business logic
+- DO write integration tests
+- DO write end-to-end tests
+- DO NOT write unit tests
+- DO NOT write performance tests
+- DO NOT write load tests
+- DO NOT write UI tests
+- DO NOT write security tests
+- Frontend tests MUST use Vitest.
+- Backend tests MUST use xUnit and Microsoft/.NET native test packages.
 
 ## Technology Stack & Constraints
 
@@ -76,7 +65,7 @@ unnecessary engineering overhead.
 - Angular HTTP: Resource API MUST be used for HTTP/data fetching; RxJS patterns for HTTP are
   prohibited unless justified in the Constitution Check.
 - Styling: Tailwind CSS v4, dark-mode-first; use vetted OSS Tailwind libraries as needed.
-- Backend: .NET 10 (minimal APIs preferred).
+- Backend: .NET 10.
 - Deployment model: Containerised (Docker) services; internal traffic MAY be non-HTTPS.
 - Public TLS/HTTP/3: Managed externally (Cloudflare Tunnel or equivalent edge proxy).
 - Networking: Minimise outbound calls; design for batched/efficient communication.

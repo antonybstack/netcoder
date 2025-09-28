@@ -1,6 +1,5 @@
 ---
 description: daisyUI 5
-alwaysApply: true
 applyTo: "**/*.ts,**/*.html,**/*.css"
 ---
 
