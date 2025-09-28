@@ -7,6 +7,8 @@ import {
   inject,
   OnInit,
   OnDestroy,
+  output,
+  Injector,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -24,17 +26,18 @@ interface SearchItem {
 })
 export class Combobox {
   private host = inject(ElementRef);
-
+  private injector = inject(Injector);
   private allItems: SearchItem[] = [];
   query = signal('');
   isOpen = signal(false);
+
+  output = output<string>();
 
   results = computed(() =>
     this.allItems.filter((item) => item.title.toLowerCase().includes(this.query().toLowerCase()))
   );
 
   constructor() {
-    // generate demo dataset (hundreds of results)
     for (let i = 1; i <= 300; i++) {
       this.allItems.push({
         title: `Item ${i}`,
@@ -58,6 +61,14 @@ export class Combobox {
 
   ngOnInit() {
     document.addEventListener('click', this.onDocumentClick, true);
+
+    // emit
+    effect(
+      () => {
+        this.output.emit(this.query());
+      },
+      { allowSignalWrites: true, injector: this.injector }
+    );
   }
 
   ngOnDestroy() {

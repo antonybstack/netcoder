@@ -1,0 +1,9 @@
+<app-combobox (output)="onComboboxOutput($event)"></app-combobox>
+
+@if(searchResult.hasValue()) {
+{{ searchResult.value() | json }}
+} @else if (searchResult.error()) {
+<div>Could not load searchResult information</div>
+} @else if (searchResult.isLoading()) {
+<div>Loading searchResult info...</div>
+}

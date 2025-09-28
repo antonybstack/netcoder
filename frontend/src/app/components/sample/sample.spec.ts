@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { Combobox } from './combobox';
+import { Sample } from './sample';
 
-describe('Combobox', () => {
-  let component: Combobox;
-  let fixture: ComponentFixture<Combobox>;
+describe('Sample', () => {
+  let component: Sample;
+  let fixture: ComponentFixture<Sample>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Combobox]
+      imports: [Sample]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(Combobox);
+    fixture = TestBed.createComponent(Sample);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

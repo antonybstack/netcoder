@@ -13,10 +13,16 @@ Angular — Deliver web apps with confidence 🚀
 - DO Use Signals API for state management.
 - DO Use Angular Resource API (e.g., httpResource built on HttpClient) for HTTP and data fetching.
 - DO Use Tailwind CSS with a dark-mode-first approach for styling.
+- DO Use barrel files (index.ts) to simplify and centralize imports.
+- DO Use Dependency Injection (DI) for managing service dependencies.
+- DO Use Angular CLI for project scaffolding, building, and testing.
+- DO Use Angular's built-in directives and pipes for common tasks.
+- DO Use Angular's routing module for navigation and lazy loading of modules.
 - DO Follow Angular best practices and conventions for project structure and build.
 
 ## DO NOT
 
+- DO NOT Use unit testing
 - DO NOT Use RxJS-based patterns for HTTP handling unless a clear, documented justification is provided.
 - DO NOT Use zone.js; prefer zoneless mode.
 - DO NOT Use `*ngIf`, `*ngFor`, `ngSwitch` or other structural directives inappropriately; prefer using Signals for conditional rendering and lists.
