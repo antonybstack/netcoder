@@ -40,11 +40,14 @@ inside containers, and delegates public security to hardened edge services.
 Frontend applications MUST use Angular 20 in zoneless mode and SHOULD prefer the Signals API
 for state management where it provides clear benefits. The project SHOULD avoid adding RxJS
 as a primary reactive model; RxJS usage is permitted only when Signals cannot reasonably
-express the required behavior (document the justification). Styling MUST use Tailwind CSS v4
-with a dark-mode-first approach. The project MAY adopt well-maintained open-source Tailwind
-libraries to accelerate UI development, but any dependency MUST be verified for stability and
-accessibility. Rationale: reduces runtime overhead, aligns with modern Angular patterns, and
-standardises styling across the product.
+express the required behavior (document the justification). The project should use the resource API,
+such as the httpResource reactive wrapper around HttpClient that gives you the request status and response
+as signals. You can thus use these signals with computed, effect, linkedSignal, or any other reactive API.
+Because it's built on top of HttpClient, httpResource supports all the same features, such as interceptors.
+Styling MUST use Tailwind CSS v4 with a dark-mode-first approach. The project MAY adopt well-maintained
+open-source Tailwind libraries to accelerate UI development, but any dependency MUST be verified for stability
+and accessibility. Rationale: reduces runtime overhead, aligns with modern Angular patterns,
+and standardises styling across the product.
 
 ### IV. Backend: .NET 10 Minimal APIs
 

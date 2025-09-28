@@ -1,0 +1,7 @@
+@import 'tailwindcss';
+@plugin "@tailwindcss/typography";
+/* app.css */
+@plugin "@tailwindcss/forms";
+@plugin "daisyui" {
+  themes: dim --default, dim --prefersdark;
+}
