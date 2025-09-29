@@ -90,7 +90,7 @@ As a prospective user evaluating the platform, I want to type a short C# 13 snip
 - How does the system handle very large submissions? → The system enforces a maximum code size of 1 MB and returns a validation error when exceeded.
 - Dangerous operations (filesystem, network, process spawning) are allowed in this PoC; user code runs without sandbox restrictions; intended for trusted internal use only.
 - Multiple runs may be in-flight from the same user; unlimited concurrency allowed; throttling deferred.
-- Should outputs from prior runs remain visible? → Define retention in the UI session [NEEDS CLARIFICATION].
+- Outputs from prior runs: Retain all results in client memory for the current browser session; display newest first; provide a "Clear History" action to empty the list; the list resets on page reload.
 
 ## Requirements _(mandatory)_
 
@@ -105,13 +105,13 @@ As a prospective user evaluating the platform, I want to type a short C# 13 snip
 - **FR-007**: The system MUST clearly differentiate outcomes: Success, Compile Error, Runtime Error, Timeout, and Network/Error states.
 - **FR-008**: The UI MUST display execution state (e.g., running/progress). Concurrent submissions are allowed.
 - **FR-009**: The system MUST validate requests and reject empty or oversized submissions (max 1 MB) with actionable messages.
-- **FR-010**: The system MUST not persist user-submitted code or outputs beyond the active session for this PoC, unless explicitly specified [NEEDS CLARIFICATION: retention].
+- **FR-010**: The system MUST not persist user-submitted code or outputs on the server. For the current browser session, the UI MUST retain all execution results in client memory with no imposed limit; users MUST be able to clear the history via an explicit "Clear History" control, and the history MUST reset on page reload.
 - **FR-011**: The system MUST isolate each execution so that outputs and errors from different runs do not intermingle.
-- **FR-012**: The system SHOULD include a helpful default example snippet visible on first load.
+- **FR-012**: The system SHOULD include a helpful default example snippet visible on first load (e.g. `Console.WriteLine("Hello, world!");`).
 - **FR-013**: The system SHOULD return execution duration and any truncation indicators with the result.
 - **FR-014**: The system SHOULD limit output size to 1 MB and truncate with a clear notice when the limit is reached.
-- **FR-015**: The system SHOULD provide basic observability in development logs (timestamp, duration, outcome type) to aid troubleshooting.
-- **FR-016**: The system MUST provide accessible UI feedback (e.g., ARIA live region) when results are updated.
+- **FR-015**: The system SHOULD only provide basic observability in development logs using the native logging solution to aid troubleshooting.
+- **FR-016**: The PoC SHALL be accessible via localhost in a development environment; no public deployment required.
 - **FR-017**: The PoC SHALL have no authentication/authorization and no sandbox restrictions; intended for trusted internal use only; not suitable for untrusted/public access.
 
 ### Key Entities _(include if feature involves data)_
@@ -160,12 +160,12 @@ Updated by main() during processing
 ## Technical Context
 
 **Language/Version**: C# 13 (server-side execution), .NET 9 runtime; Browser-based UI built with a modern web framework already present in the repo (frontend).  
-**Primary Dependencies**: [NEEDS CLARIFICATION: UI code editor component], [NEEDS CLARIFICATION: server-side compilation/execution mechanism], kept abstract for PoC planning.  
+**Primary Dependencies**: Monaco Editor (latest) for the UI code editor; server-side compilation/execution mechanism selection remains abstract for PoC planning.  
 **Storage**: N/A for PoC (no persistence of code or results).  
-**Testing**: [NEEDS CLARIFICATION: unit/e2e testing approach for compile errors, timeouts, and success cases].  
+**Testing**: Backend unit and integration tests for compile errors and success cases.
 **Target Platform**: Web client with a server process capable of compiling and executing C# 13 code.  
 **Project Type**: Web (client-server).  
 **Performance Goals**: For the canonical "Hello, world!" run, end-to-end time (submit → output displayed) p95 ≤ 2s on a developer machine.  
 **Constraints**: Execution timeout = 10s; output limit = 1 MB; submission size ≤ 1 MB; per-client concurrency: unlimited (throttling deferred); Security posture: no sandbox restrictions; trusted internal-only; not for public exposure.  
 **Scale/Scope**: Single-user demo and small group evaluation; not intended for production scale. Concurrency expectations resolved.  
-**Deployment / Environments**: [NEEDS CLARIFICATION: deployment configuration]. For PoC, target local development environment first; any hosted demo to be defined separately.
+**Deployment / Environments**: For PoC, target localhost development environment first. Production deployment is done through docker-compose and on a separate port.

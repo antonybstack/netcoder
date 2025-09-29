@@ -65,14 +65,14 @@ following gates apply:
   CI, and how health/metrics/admin endpoints are separated or namespaced.
 - Technology Alignment: If the project includes frontend or backend components, the
   plan MUST state how it aligns with the mandated stack (Frontend: Angular 20 zoneless,
-  Tailwind v4; Backend: .NET 10 minimal APIs) or justify deviations.
+  Tailwind v4; Backend: .NET 9 minimal APIs) or justify deviations.
 - Frontend HTTP API handling (Angular only): Plans MUST use Angular's Resource API for
   HTTP/data fetching. RxJS-based HttpClient patterns are PROHIBITED for API handling
   unless explicitly justified with a rationale and migration plan.
 - Tests & Quality Gates: Confirm unit and integration tests and any required contract
   tests; performance testing is OPTIONAL and only required when acceptance criteria
-  specify performance targets. Testing frameworks MUST align with the stack: Angular →
-  Vitest; .NET → xUnit with Microsoft/.NET native test runner/packages.
+  specify performance targets. Testing frameworks MUST align with the stack:
+  .NET → xUnit with Microsoft/.NET native test runner/packages.
 - Observability: Describe logging (structured logs and correlation IDs) and metrics
   exposure for the feature surface.
 - Styling & UX: Frontend plans MUST adopt dark-mode-first Tailwind v4 styling or

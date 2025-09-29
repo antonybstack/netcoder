@@ -143,8 +143,10 @@ T015. Frontend UI: code editor and run flow
   - /Users/antbly/dev/netcoder/frontend/src/app/components/code-page/code-page.ts
   - /Users/antbly/dev/netcoder/frontend/src/app/components/code-page/code-page.css
 - Actions:
-  - Provide code editor (textarea acceptable for PoC)
+  - Use Monaco Editor (latest) as the code editor; install/configure the `monaco-editor` package and basic C# language settings.
   - Run button; show pending state; display stdout/stderr, outcome, duration, truncation flag
+  - Provide a "Clear History" action that empties the results list in the UI; history resets on page reload; no server-side persistence.
+  - Display results as an unbounded session-scoped list (newest first).
   - Accessibility: announce result updates via ARIA live region
 
 T016. Frontend wiring: connect Resource API to UI [P]
@@ -153,6 +155,7 @@ T016. Frontend wiring: connect Resource API to UI [P]
 - Actions:
   - Submit code; prevent duplicate submit while pending
   - Support multiple results (concurrent runs) in UI list
+  - Maintain an unbounded in-memory list of results for the current browser session (no cap); append results in completion order; clearing history must not cancel in-flight executions.
 
 T017. Docs polish: verify quickstart and add curl samples [P]
 

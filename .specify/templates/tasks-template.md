@@ -64,7 +64,6 @@
 
 **Testing Setup (align with Constitution)**
 
-- [ ] If frontend = Angular: add and configure Vitest; remove/replace Karma; add npm scripts for `test` and `test:watch` using Vitest.
 - [ ] If backend = .NET: create xUnit test projects (e.g., `dotnet new xunit`), reference SUT projects, and enable Microsoft/.NET native test runner in CI.
 
 ## Phase 3.2: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
@@ -73,7 +72,7 @@
 
 - [ ] T100 [P] Contract tests for each endpoint (one file per endpoint under tests/contract)
 - [ ] T101 [P] Integration tests for primary flows (tests/integration)
-- [ ] T102 [P] Frontend component/service tests (Vitest) and backend unit tests (xUnit) scaffolds
+- [ ] T102 [P] Backend integration tests (xUnit) scaffolds
 
 ## Phase 3.3: Core Implementation (ONLY after tests are failing)
 
@@ -111,7 +110,7 @@
 # Launch T100-T102 together (different files):
 Task: "Contract tests for endpoints in tests/contract/*"
 Task: "Integration tests in tests/integration/*"
-Task: "Frontend component/service tests (Vitest) and backend unit tests (xUnit)"
+Task: "Backend unit tests (xUnit)"
 ```
 
 ## Notes
@@ -152,4 +151,4 @@ _GATE: Checked by main() before returning_
 - [ ] No task modifies same file as another [P] task
 - [ ] Environment-specific deployment configuration provided (dev/prod) and port
       collision avoidance documented
-- [ ] Testing frameworks align with Constitution (Angular → Vitest, .NET → xUnit)
+- [ ] Testing frameworks align with Constitution (.NET → xUnit)

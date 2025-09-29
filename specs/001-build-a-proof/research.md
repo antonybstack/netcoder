@@ -38,7 +38,6 @@
 
 - Decision: Target C# 13 semantics on .NET 9 runtime in current repo; ensure Roslyn package versions support C# 13.
 - Rationale: Aligns with feature spec and current backend.
-- Alternatives: Migrate to .NET 10 immediately; deferred per Constitution Check with migration plan.
 
 ## Implementation Notes (feed into Phase 1)
 

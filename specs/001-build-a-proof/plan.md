@@ -35,7 +35,7 @@ Enable a PoC where users type short C# 13 snippets in a browser and execute them
 **Language/Version**: Backend: C# 13 on .NET 9 (current repo); Frontend: Angular 20  
 **Primary Dependencies**: Roslyn C# Scripting (Microsoft.CodeAnalysis.CSharp.Scripting); Angular Resource API for HTTP; Tailwind v4 + daisyUI for UI  
 **Storage**: N/A (no persistence in PoC)  
-**Testing**: Backend: xUnit integration/contract tests; Frontend: Vitest (later)  
+**Testing**: Backend: xUnit integration/contract tests
 **Target Platform**: Local development (macOS/Linux/Windows); containerised future deployment  
 **Project Type**: Web (frontend + backend)  
 **Performance Goals**: Hello World end-to-end ≤ 2s p95 on dev machine  
@@ -46,9 +46,9 @@ Enable a PoC where users type short C# 13 snippets in a browser and execute them
 
 - Runtime & Networking: Internal HTTP between frontend and backend only; no outbound external calls. For production, TLS terminates at edge (e.g., Cloudflare Tunnel). Payloads are single JSON request/response; no batching needed.
 - Environment configuration: Development uses launch profile binding to <http://localhost:5189> (backend). Production to be containerised with separate host port mappings; health/metrics endpoints to be namespaced.
-- Technology Alignment: Frontend will use Angular 20 zoneless and Resource API for HTTP; Tailwind v4/daisyUI for styling. Backend currently .NET 9 (deviation from .NET 10 mandate) — justified for PoC; migration to .NET 10 planned in follow-up once execution service is proven.
+- Technology Alignment: Frontend will use Angular 20 zoneless and Resource API for HTTP; Tailwind v4/daisyUI for styling. Backend uses .NET 9.
 - Frontend HTTP API handling: Will use Angular Resource API; RxJS HttpClient patterns prohibited.
-- Tests & Quality Gates: Plan includes backend xUnit integration and contract tests; frontend Vitest later. Performance testing not required beyond stated goal.
+- Tests & Quality Gates: Plan includes backend xUnit integration and contract tests. Performance testing not required beyond stated goal.
 - Observability: Structured logs with correlation ID (requestId), durationMs, outcome; minimal metrics surface planned for later.
 - Styling & UX: Dark-mode-first Tailwind v4 with daisyUI components for the editor page.
 - Scaffolding & Code Generation: Use `dotnet new` and `ng generate` where new scaffolds are needed; reuse existing projects.

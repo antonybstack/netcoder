@@ -3,17 +3,13 @@ Sync Impact Report
 - Version change: 1.1.0 → 1.2.0
 - Modified principles / sections:
   - Frontend (Angular 20 & Signals): HTTP Resource API is REQUIRED; RxJS-based HttpClient patterns are prohibited for API handling unless justified in the plan's Constitution Check.
-  - Development Workflow & Quality Gates: Added explicit testing frameworks (Vitest for Angular, xUnit for .NET) and CLI scaffolding policy.
+  - Development Workflow & Quality Gates: Added explicit testing frameworks (xUnit for .NET) and CLI scaffolding policy.
 - Added sections: none
 - Removed sections: none
 - Templates requiring updates:
   - .specify/templates/plan-template.md ✅ updated (gates: Resource API, test frameworks, CLI scaffolding)
-  - .specify/templates/tasks-template.md ✅ updated (setup tasks for Vitest/xUnit; CLI scaffolding)
+  - .specify/templates/tasks-template.md ✅ updated (setup tasks for xUnit; CLI scaffolding)
   - .specify/templates/spec-template.md ✅ no change required
-- Runtime docs updates:
-  - app/README.md ✅ updated (Vitest replaces Karma)
-- Follow-up TODOs:
-  - TODO(VITEST_MIGRATION): Ensure Angular workspace migrates from Karma to Vitest (packages, config, scripts) and update quickstart accordingly.
 -->
 
 # Netcoder Constitution
@@ -62,14 +58,14 @@ Sync Impact Report
 
 ### 3. Backend: .NET
 
-- Backend services MUST be implemented on .NET 10 using controller APIs.
+- Backend services MUST be implemented on .NET 9 using controller APIs.
 - Database access MUST use Entity Framework Core.
 - Project structure MUST follow .NET best practices and conventions.
 - Maintain .http files for API testing and documentation.
 
 #### DO
 
-- DO USE .NET 10 and C# 13 or later for building backend services.
+- DO USE .NET 9 and C# 13 or later for building backend services.
 - DO USE Native dependency injection (DI) MUST be used for managing dependencies.
 - DO USE Asynchronous programming (async/await) MUST be used for I/O-bound operations.
 - DO USE Cancellation tokens and pass them in all async methods to allow for graceful cancellation.
@@ -96,7 +92,7 @@ Sync Impact Report
 - DO NOT write load tests
 - DO NOT write UI tests
 - DO NOT write security tests
-- Frontend tests MUST use Vitest.
+- DO NOT write tests for frontend code
 - Backend tests MUST use xUnit and Microsoft/.NET native test packages.
 
 ## 5. Technology Stack & Constraints
@@ -105,11 +101,11 @@ Sync Impact Report
 - Angular HTTP: Resource API MUST be used for HTTP/data fetching; RxJS patterns for HTTP are
   prohibited unless justified in the Constitution Check.
 - Styling: Tailwind CSS v4, dark-mode-first; use vetted OSS Tailwind libraries as needed.
-- Backend: .NET 10.
+- Backend: .NET 9.
 - Deployment model: Containerised (Docker) services; internal traffic MAY be non-HTTPS.
 - Public TLS/HTTP/3: Managed externally (Cloudflare Tunnel or equivalent edge proxy).
 - Networking: Minimise outbound calls; design for batched/efficient communication.
-- Testing: Frontend tests MUST use Vitest; Backend tests MUST use xUnit and Microsoft/.NET
+- Testing: Backend tests MUST use xUnit and Microsoft/.NET. Do not write frontend tests.
   native test runner/packages.
 - Scaffolding: Prefer official CLIs for boilerplate and templates (e.g., `ng generate`,
   `dotnet new`) to ensure up-to-date project structures.
