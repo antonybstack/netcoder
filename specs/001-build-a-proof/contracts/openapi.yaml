@@ -1,0 +1,71 @@
+openapi: 3.0.3
+info:
+  title: Code Execution API (PoC)
+  version: 0.1.0
+servers:
+  - url: http://localhost:5189
+paths:
+  /api/exec/run:
+    post:
+      summary: Execute C# 13 code snippet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CodeSubmission"
+      responses:
+        "200":
+          description: Execution completed (success or error)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExecutionResult"
+components:
+  schemas:
+    CodeSubmission:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          description: C# 13 top-level code
+          maxLength: 1048576
+        requestId:
+          type: string
+          description: Optional client-supplied correlation id
+    Diagnostic:
+      type: object
+      properties:
+        id:
+          type: string
+        severity:
+          type: string
+          enum: [Hidden, Info, Warning, Error]
+        message:
+          type: string
+        line:
+          type: integer
+          minimum: 1
+        column:
+          type: integer
+          minimum: 1
+    ExecutionResult:
+      type: object
+      required: [outcome, stdout, stderr, diagnostics, durationMs, truncated]
+      properties:
+        outcome:
+          type: string
+          enum: [Success, CompileError, RuntimeError, Timeout]
+        stdout:
+          type: string
+        stderr:
+          type: string
+        diagnostics:
+          type: array
+          items:
+            $ref: "#/components/schemas/Diagnostic"
+        durationMs:
+          type: integer
+        truncated:
+          type: boolean

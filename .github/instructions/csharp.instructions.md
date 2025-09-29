@@ -19,7 +19,6 @@ applyTo: "**/*.cs,**/*.csproj,**/*.sln"
 ## DO NOT
 
 - DO NOT write comments
-- DO NOT generate or adhere to an OpenAPI/Swagger annotations in code.
 - DO NOT Use synchronous programming for I/O-bound operations.
 - DO NOT Use blocking calls in async methods.
 - DO NOT Use `Thread.Sleep` for delays; prefer `Task.Delay`.
