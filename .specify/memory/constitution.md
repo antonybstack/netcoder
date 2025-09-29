@@ -20,13 +20,13 @@ Sync Impact Report
 
 ## Core Principles
 
-### I. General
+### 1. General
 
 - The project is CONTAINER-FIRST and MAY operate without embedded HTTPS/TLS inside containers.
 - TLS/SSL termination and public-facing security will be handled by external networking infrastructure (e.g., Cloudflare Tunnel, edge proxy).
-- Rationale: simplifies service runtime, and prevent complexities around certificate management in development and production, as well as avoiding TLS termination overhead in internal traffic.
+- The project prioritises integration and end-to-end testing over unit tests.
 
-### II. Frontend: Angular 20
+### 2. Frontend: Angular 20
 
 - Frontend applications MUST use Angular 20 in zoneless mode (avoids zone.js).'
 - The Signals API MUST be used for state management.
@@ -39,14 +39,14 @@ Sync Impact Report
 - When writing frontend code, reference the project's `.github/instructions/angular.md`.
 - When writing styling code, reference the project's `.github/instructions/daisyui.md`.
 
-### IV. Backend: .NET
+### 3. Backend: .NET
 
 - Backend services MUST be implemented on .NET 10 using controller APIs.
 - Database access MUST use Entity Framework Core.
 - Project structure MUST follow .NET best practices and conventions.
 - When writing backend code, reference the project's `.github/instructions/csharp.md`.
 
-### V. Testing
+### 4. Testing
 
 - Only write tests for business logic
 - DO write integration tests
@@ -59,7 +59,7 @@ Sync Impact Report
 - Frontend tests MUST use Vitest.
 - Backend tests MUST use xUnit and Microsoft/.NET native test packages.
 
-## Technology Stack & Constraints
+## 5. Technology Stack & Constraints
 
 - Frontend: Angular 20 (zoneless), Signals API preferred; avoid RxJS unless justified.
 - Angular HTTP: Resource API MUST be used for HTTP/data fetching; RxJS patterns for HTTP are
@@ -75,7 +75,7 @@ Sync Impact Report
   `dotnet new`) to ensure up-to-date project structures.
 - Performance testing: OPTIONAL unless explicitly required by feature acceptance criteria.
 
-## Environment Configuration & Deployment Constraints
+## 6. Environment Configuration & Deployment Constraints
 
 To avoid conflicting deployments and accidental port collisions, all services and tooling
 MUST provide separate production and development environment configurations. The project
@@ -95,26 +95,15 @@ MUST be namespaced or port-separated between environments. Rationale: prevents a
 service collisions and simplifies local development while maintaining safe production
 deployments.
 
-## Development Workflow & Quality Gates
+## 7. Development Workflow & Quality Gates
 
-- Tests: Unit and integration tests MUST be written and run as part of CI. Contract tests
-  MUST be created for public service APIs and MUST fail before implementation (TDD
-  discipline for contract-driven development). Frontend tests MUST use Vitest; Backend
-  tests MUST use xUnit and Microsoft/.NET native test packages.
-- Code reviews: All changes MUST go through PRs with at least one approving reviewer.
 - Constitution Check: All plans and specs MUST include a short Constitution Check section
   listing how the proposal conforms to each core principle; violations MUST include a
   documented justification and migration or mitigation plan. The plan MUST include how
   production and development environment configurations are separated and how ports are
   selected to avoid conflicts.
-- Frontend HTTP API handling: Plans that include Angular MUST use the Angular Resource API
-  for HTTP and data fetching. Any RxJS-based HTTP usage MUST be explicitly justified.
 - Scaffolding & Code Generation: Prefer official CLI tools (e.g., `ng generate`, `dotnet new`)
   for generating templates/boilerplate to stay current with framework best practices.
-- Security: Although internal traffic MAY be non-HTTPS, services MUST validate request
-  provenance; secrets MUST be stored using approved secret management solutions.
-- Observability: Structured logs, correlation IDs, and basic metrics MUST be included in
-  any service that is user-facing or supports critical flows.
 
 ## Governance
 
