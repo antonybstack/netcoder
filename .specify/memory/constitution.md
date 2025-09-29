@@ -36,6 +36,27 @@ Sync Impact Report
 - Styling MUST use [tailwind-css](https://www.npmjs.com/package/tailwindcss), ([daisyUI](https://npmjs.com/package/daisyui)), with a dark-mode-first approach.
 - The project MAY adopt well-maintained open-source Tailwind libraries to accelerate UI development, such as [tailwind-css/forms](https://npmjs.com/package/@tailwindcss/forms).
 - Project structure and build MUST follow Angular best practices and conventions.
+
+#### DO
+
+- DO Use Angular 20 for building web applications.
+- DO Use Signals API for state management.
+- DO Use Angular Resource API (e.g., httpResource built on HttpClient) for HTTP and data fetching.
+- DO Use Tailwind CSS with a dark-mode-first approach for styling.
+- DO Use barrel files (index.ts) to simplify and centralize imports.
+- DO Use Dependency Injection (DI) for managing service dependencies.
+- DO Use Angular CLI for project scaffolding, building, and testing.
+- DO Use Angular's built-in directives and pipes for common tasks.
+- DO Use Angular's routing module for navigation and lazy loading of modules.
+- DO Follow Angular best practices and conventions for project structure and build.
+
+#### DO NOT
+
+- DO NOT Use unit testing
+- DO NOT Use RxJS-based patterns for HTTP handling unless a clear, documented justification is provided.
+- DO NOT Use zone.js; prefer zoneless mode.
+- DO NOT Use `*ngIf`, `*ngFor`, `ngSwitch` or other structural directives inappropriately; prefer using the new control flow syntax such as `@if`, `@for`, etc.
+- DO NOT Use `@Input`, `@Output`, or similar older pattern APIs; instead use signal-based inputs/outputs (e.g. `input.required<string>()`).
 - When writing frontend code, reference the project's `.github/instructions/angular.md`.
 - When writing styling code, reference the project's `.github/instructions/daisyui.md`.
 
@@ -44,7 +65,27 @@ Sync Impact Report
 - Backend services MUST be implemented on .NET 10 using controller APIs.
 - Database access MUST use Entity Framework Core.
 - Project structure MUST follow .NET best practices and conventions.
-- When writing backend code, reference the project's `.github/instructions/csharp.md`.
+- Maintain .http files for API testing and documentation.
+
+#### DO
+
+- DO USE .NET 10 and C# 13 or later for building backend services.
+- DO USE Native dependency injection (DI) MUST be used for managing dependencies.
+- DO USE Asynchronous programming (async/await) MUST be used for I/O-bound operations.
+- DO USE Cancellation tokens and pass them in all async methods to allow for graceful cancellation.
+- DO USE LINQ for data manipulation and querying collections.
+- DO USE task-based asynchronous patterns for concurrency.
+- DO USE Exception handling with try/catch blocks MUST be implemented for robust error management.
+- DO write tests that can be run in parallel.
+
+#### DO NOT
+
+- DO NOT write comments
+- DO NOT generate or adhere to an OpenAPI/Swagger annotations in code.
+- DO NOT Use synchronous programming for I/O-bound operations.
+- DO NOT Use blocking calls in async methods.
+- DO NOT Use `Thread.Sleep` for delays; prefer `Task.Delay`.
+- DO NOT Use `async void` except for event handlers.
 
 ### 4. Testing
 
