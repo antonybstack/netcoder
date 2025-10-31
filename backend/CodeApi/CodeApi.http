@@ -4,3 +4,38 @@ GET {{CodeApi_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+POST {{CodeApi_HostAddress}}/api/exec/run
+Content-Type: application/json
+
+{
+  "code": "Console.WriteLine(\"Hello, world!\");"
+}
+
+###
+POST {{CodeApi_HostAddress}}/api/exec/run
+Content-Type: application/json
+
+{
+  "code": "Console.WriteLine(\"OOPS\")"
+}
+
+###
+
+POST {{CodeApi_HostAddress}}/api/exec/run
+Content-Type: application/json
+
+{
+  "code": "while(true) { }"
+}
+
+###
+
+POST {{CodeApi_HostAddress}}/api/exec/run
+Content-Type: application/json
+
+{
+  "code": "Console.Write(new string('a', 1100000));"
+}
+
+###

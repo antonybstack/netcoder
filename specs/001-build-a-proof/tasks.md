@@ -26,32 +26,32 @@ Conventions:
 
 ## Phase 3.1: Setup
 
-- [ ] T001 Add Roslyn scripting packages to backend project
+- [x] T001 Add Roslyn scripting packages to backend project
 
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi/CodeApi.csproj
   - Actions:
     - Add Microsoft.CodeAnalysis.CSharp.Scripting (latest stable supporting C# 13)
     - Add Microsoft.CodeAnalysis.Scripting.Common (latest stable)
 
-- [ ] T002 [P] Create model: CodeSubmission
+- [x] T002 [P] Create model: CodeSubmission
 
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi/Models/CodeSubmission.cs
   - Actions:
     - Implement properties per data model: code (string, required, ≤ 1 MB), requestId (string, optional), submittedAt (DateTime assigned server-side)
 
-- [ ] T003 [P] Create model: Diagnostic + Severity enum
+- [x] T003 [P] Create model: Diagnostic + Severity enum
 
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi/Models/Diagnostic.cs
   - Actions:
     - Implement properties per data model and enum Severity [Hidden, Info, Warning, Error]
 
-- [ ] T004 [P] Create model: ExecutionResult + Outcome enum
+- [x] T004 [P] Create model: ExecutionResult + Outcome enum
 
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi/Models/ExecutionResult.cs
   - Actions:
     - Implement properties per data model and enum Outcome [Success, CompileError, RuntimeError, Timeout]
 
-- [ ] T005 [P] Controller stub to enable test compilation
+- [x] T005 [P] Controller stub to enable test compilation
 
   - Files:
     - /Users/antbly/dev/netcoder/backend/CodeApi/Controllers/ExecController.cs
@@ -60,7 +60,7 @@ Conventions:
     - Add [ApiController] at route "api/exec" with POST action "run" accepting CodeSubmission and returning ExecutionResult placeholder
     - Ensure Program.cs adds controllers and JSON options
 
-- [ ] T006 Scaffold backend tests project (xUnit + WebApplicationFactory)
+- [x] T006 Scaffold backend tests project (xUnit + WebApplicationFactory)
   - Files/Dirs:
     - /Users/antbly/dev/netcoder/backend/CodeApi.Tests/CodeApi.Tests.csproj
     - /Users/antbly/dev/netcoder/backend/CodeApi.Tests/Integration/
@@ -72,35 +72,35 @@ Conventions:
 
 ## Phase 3.2: Tests First (must fail initially)
 
-- [ ] T007 [P] Contract test for contracts/openapi.yaml
+- [x] T007 [P] Contract test for contracts/openapi.yaml
 
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi.Tests/Contract/OpenApi_Contract_ExecRun.cs
   - Behavior:
     - Start test server and call POST /api/exec/run with minimal valid JSON
     - Assert response JSON has required fields per openapi.yaml (outcome, stdout, stderr, diagnostics[], durationMs, truncated)
 
-- [ ] T008 [P] Integration: Hello World success
+- [x] T008 [P] Integration: Hello World success
 
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi.Tests/Integration/Run_HelloWorld_Succeeds.cs
   - Behavior:
     - POST code: Console.WriteLine("Hello, world!")
     - Assert 200, outcome=Success, stdout contains "Hello, world!", truncated=false
 
-- [ ] T009 [P] Integration: Compile error diagnostics
+- [x] T009 [P] Integration: Compile error diagnostics
 
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi.Tests/Integration/Run_SyntaxError_CompileError.cs
   - Behavior:
     - POST invalid code (e.g., missing semicolon)
     - Assert 200, outcome=CompileError, diagnostics non-empty
 
-- [ ] T010 [P] Integration: Timeout at 10s
+- [x] T010 [P] Integration: Timeout at 10s
 
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi.Tests/Integration/Run_InfiniteLoop_TimesOut.cs
   - Behavior:
     - POST infinite loop
     - Assert outcome=Timeout, durationMs ≥ 10000 (allow small variance)
 
-- [ ] T011 [P] Integration: Output truncation at 1 MB
+- [x] T011 [P] Integration: Output truncation at 1 MB
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi.Tests/Integration/Run_LargeOutput_Truncated.cs
   - Behavior:
     - POST code writing >1 MB to stdout
@@ -108,13 +108,13 @@ Conventions:
 
 ## Phase 3.3: Core Implementation (make tests pass)
 
-- [ ] T012 Service interface: ICodeExecutionService
+- [x] T012 Service interface: ICodeExecutionService
 
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi/Services/ICodeExecutionService.cs
   - Actions:
     - Define: `Task<ExecutionResult> ExecuteAsync(string code, CancellationToken ct)`
 
-- [ ] T013 Service implementation: CodeExecutionService (Roslyn scripting)
+- [x] T013 Service implementation: CodeExecutionService (Roslyn scripting)
 
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi/Services/CodeExecutionService.cs
   - Behavior:
@@ -123,7 +123,7 @@ Conventions:
     - Truncate outputs at 1 MB and set truncated flag
     - Map diagnostics with id, severity, message, line, column
 
-- [ ] T014 Endpoint: wire DI, validations, and controller action
+- [x] T014 Endpoint: wire DI, validations, and controller action
   - Files:
     - /Users/antbly/dev/netcoder/backend/CodeApi/Program.cs
     - /Users/antbly/dev/netcoder/backend/CodeApi/Controllers/ExecController.cs
@@ -134,19 +134,19 @@ Conventions:
 
 ## Phase 3.4: Integration
 
-- [ ] T015 [P] Developer HTTP examples
+- [x] T015 [P] Developer HTTP examples
 
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi/CodeApi.http
   - Actions:
     - Add POST /api/exec/run examples: Hello World, Syntax Error, Timeout, Large Output
 
-- [ ] T016 [P] Frontend API client (Angular Resource API)
+- [x] T016 [P] Frontend API client (Angular Resource API)
 
   - Files: /Users/antbly/dev/netcoder/frontend/src/app/services/api.service.ts
   - Actions:
     - Define resource for POST /api/exec/run with types matching CodeSubmission/ExecutionResult
 
-- [ ] T017 [P] Frontend UI: code-page run flow
+- [x] T017 [P] Frontend UI: code-page run flow
   - Files:
     - /Users/antbly/dev/netcoder/frontend/src/app/components/code-page/code-page.html
     - /Users/antbly/dev/netcoder/frontend/src/app/components/code-page/code-page.ts
@@ -158,11 +158,11 @@ Conventions:
 
 ## Phase 3.5: Polish
 
-- [ ] T018 [P] Docs polish: verify quickstart and add curl samples
+- [x] T018 [P] Docs polish: verify quickstart and add curl samples
 
   - Files: /Users/antbly/dev/netcoder/specs/001-build-a-proof/quickstart.md
 
-- [ ] T019 [P] Repo warning: internal-only, no sandbox
+- [x] T019 [P] Repo warning: internal-only, no sandbox
   - Files: /Users/antbly/dev/netcoder/README.md
 
 ---

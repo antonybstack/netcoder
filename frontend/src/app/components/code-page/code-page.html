@@ -1,1 +1,39 @@
-<p>TODO</p>
+<div class="page">
+  <div class="controls">
+    <textarea
+      class="code"
+      [value]="code()"
+      (input)="code.set($any($event.target).value)"
+      rows="8"
+      spellcheck="false"
+    ></textarea>
+    <div class="buttons">
+      <button (click)="run()">Run</button>
+      <button (click)="clear()">Clear History</button>
+      @if (inflight() > 0) {<span class="pending">Running ({{ inflight() }})...</span>}
+    </div>
+  </div>
+
+  <div class="results">
+    <h3>Results</h3>
+    @for (r of results(); track $index) {
+    <div class="result">
+      <div class="meta">
+        <span class="outcome">{{ r.outcome }}</span>
+        <span class="duration">{{ r.durationMs }} ms</span>
+        <span class="truncated" [class.on]="r.truncated">{{ r.truncated ? 'truncated' : '' }}</span>
+      </div>
+      <div class="io">
+        <div>
+          <h4>stdout</h4>
+          <pre>{{ r.stdout }}</pre>
+        </div>
+        <div>
+          <h4>stderr</h4>
+          <pre>{{ r.stderr }}</pre>
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+</div>
