@@ -17,7 +17,7 @@ POST {{CodeApi_HostAddress}}/api/exec/run
 Content-Type: application/json
 
 {
-  "code": "Console.WriteLine(\"OOPS\")"
+  "code": "Console.WriteLine(\"OOPS\");"
 }
 
 ###

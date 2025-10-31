@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using CodeApi.Services;
 using Microsoft.AspNetCore.Builder;
@@ -7,7 +8,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers().AddJsonOptions(o =>
 {
-    o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    var jsonOptions = o.JsonSerializerOptions;
+    jsonOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    jsonOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+    jsonOptions.Converters.Add(new JsonStringEnumConverter());
 });
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<ICodeExecutionService, CodeExecutionService>();
