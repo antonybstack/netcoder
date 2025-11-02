@@ -8,6 +8,8 @@ namespace CodeApi.Controllers;
 [Route("api/exec")]
 public class ExecController : ControllerBase
 {
+    private const int MaxCodeLength = 1_048_576;
+
     readonly ICodeExecutionService _service;
     readonly ILogger<ExecController> _logger;
 
@@ -20,11 +22,33 @@ public class ExecController : ControllerBase
     [HttpPost("run")]
     public async Task<ActionResult<ExecutionResult>> Run([FromBody] CodeSubmission submission)
     {
-        if (submission == null || string.IsNullOrWhiteSpace(submission.Code)) return BadRequest();
-        if (submission.Code.Length > 1048576) return BadRequest();
+        if (submission is null)
+        {
+            ModelState.AddModelError(nameof(CodeSubmission.Code), "Submission payload is required.");
+            return ValidationProblem(ModelState);
+        }
+
+        if (string.IsNullOrWhiteSpace(submission.Code))
+        {
+            ModelState.AddModelError(nameof(CodeSubmission.Code), "Code must not be empty.");
+            return ValidationProblem(ModelState);
+        }
+
+        if (submission.Code.Length > MaxCodeLength)
+        {
+            ModelState.AddModelError(nameof(CodeSubmission.Code), $"Code must be \u2264 {MaxCodeLength} characters.");
+            return ValidationProblem(ModelState);
+        }
+
         submission.SubmittedAt = DateTime.UtcNow;
+        submission.RequestId ??= HttpContext.TraceIdentifier;
+
         var result = await _service.ExecuteAsync(submission.Code, HttpContext.RequestAborted);
-        _logger.LogInformation("requestId={RequestId} outcome={Outcome} durationMs={Duration}", submission.RequestId, result.Outcome, result.DurationMs);
+        _logger.LogInformation(
+            "Execution completed for {RequestId} with {Outcome} in {DurationMs}ms",
+            submission.RequestId,
+            result.Outcome,
+            result.DurationMs);
         return Ok(result);
     }
 }

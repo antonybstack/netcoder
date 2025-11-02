@@ -5,7 +5,7 @@
 
 ## Execution Flow (main)
 
-```
+```text
 1. Load plan.md from feature directory
    → If not found: ERROR "No implementation plan found"
    → Extract: tech stack, libraries, structure
@@ -51,8 +51,10 @@
 - [ ] T002 Initialize [language] project with [framework] dependencies
 - [ ] T003 [P] Configure linting and formatting tools
 - [ ] T004 Prefer official CLI scaffolding for boilerplate (e.g., `ng generate`, `dotnet new`). Record exact commands in the plan.
+- [ ] T005 [P] Configure CI build and test jobs (always‑green build)
+  - Actions: Add workflows/pipelines to run `dotnet build`, `dotnet test` for backend and `ng build` (and `ng test` if frontend tests exist) on PRs and main branch.
 
-**Environment & Deployment Setup**
+Environment & Deployment Setup
 
 - [ ] Create environment-specific deployment files (e.g., `docker-compose.dev.yml`,
       `docker-compose.prod.yml`) and document host port mappings for development to
@@ -62,13 +64,14 @@
 - [ ] Ensure CI/CD pipelines use non-conflicting port ranges and do not deploy
       development stacks to production clusters.
 
-**Testing Setup (align with Constitution)**
+Testing Setup (align with Constitution)
 
 - [ ] If backend = .NET: create xUnit test projects (e.g., `dotnet new xunit`), reference SUT projects, and enable Microsoft/.NET native test runner in CI.
+- [ ] If frontend tests exist: configure `ng test` in CI but note that frontend unit tests are optional per constitution.
 
 ## Phase 3.2: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
 
-**CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
+CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation
 
 - [ ] T100 [P] Contract tests for each endpoint (one file per endpoint under tests/contract)
 - [ ] T101 [P] Integration tests for primary flows (tests/integration)
@@ -106,7 +109,7 @@
 
 ## Parallel Example
 
-```
+```text
 # Launch T100-T102 together (different files):
 Task: "Contract tests for endpoints in tests/contract/*"
 Task: "Integration tests in tests/integration/*"
@@ -118,11 +121,13 @@ Task: "Backend unit tests (xUnit)"
 - [P] tasks = different files, no dependencies
 - Verify tests fail before implementing
 - Commit after each task
+- Run local builds/tests frequently to maintain an always‑green working tree
+  (e.g., `dotnet build`, `dotnet test`, `ng build`, and `ng test` if applicable).
 - Avoid: vague tasks, same file conflicts
 
 ## Task Generation Rules
 
-_Applied during main() execution_
+Applied during main() execution
 
 1. **From Contracts**:
    - Each contract file → contract test task [P]
@@ -141,7 +146,7 @@ _Applied during main() execution_
 
 ## Validation Checklist
 
-_GATE: Checked by main() before returning_
+GATE: Checked by main() before returning
 
 - [ ] All contracts have corresponding tests
 - [ ] All entities have model tasks
@@ -152,3 +157,4 @@ _GATE: Checked by main() before returning_
 - [ ] Environment-specific deployment configuration provided (dev/prod) and port
       collision avoidance documented
 - [ ] Testing frameworks align with Constitution (.NET → xUnit)
+- [ ] Always‑green build: backend `dotnet build`/`dotnet test` and frontend `ng build` (and `ng test` if tests exist) are part of CI and passing

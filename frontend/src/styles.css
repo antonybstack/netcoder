@@ -1,7 +1,37 @@
-@import 'tailwindcss';
-@plugin "@tailwindcss/typography";
-/* app.css */
-@plugin "@tailwindcss/forms";
-@plugin "daisyui" {
-  themes: dim --default, dim --prefersdark;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'codicon';
+  font-display: block;
+  src: url('/assets/monaco/codicon.ttf') format('truetype');
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    min-height: 100%;
+  }
+
+  body {
+    min-height: 100%;
+    @apply bg-base-200 text-base-content antialiased;
+  }
+
+  .codicon[class*='codicon-'] {
+    font: normal normal normal 16px/1 codicon;
+    display: inline-block;
+    text-decoration: none;
+    text-rendering: auto;
+    text-align: center;
+    text-transform: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    user-select: none;
+    -webkit-user-select: none;
+  }
 }

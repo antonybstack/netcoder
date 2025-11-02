@@ -15,8 +15,11 @@ public class Run_LargeOutput_Truncated
         response.EnsureSuccessStatusCode();
         var json = await response.Content.ReadFromJsonAsync<JsonObject>();
         Assert.NotNull(json);
+        Assert.Equal("Success", json!["outcome"]!.GetValue<string>());
         Assert.True(json!["truncated"]!.GetValue<bool>());
         var stdout = json["stdout"]!.GetValue<string>();
-        Assert.True(stdout.Length <= 1048576);
+        Assert.Equal(1_048_576, stdout.Length);
+        Assert.Equal(string.Empty, json["stderr"]!.GetValue<string>());
+        Assert.Empty(json["diagnostics"]!.AsArray());
     }
 }

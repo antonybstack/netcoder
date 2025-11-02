@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -7,143 +8,31 @@ using System.Threading;
 using System.Threading.Tasks;
 using CodeApi.Models;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Scripting;
+using Microsoft.CodeAnalysis.Scripting;
 using ModelDiagnostic = CodeApi.Models.Diagnostic;
 
 namespace CodeApi.Services;
 
 public class CodeExecutionService : ICodeExecutionService
 {
-    private const int OutputLimit = 1048576;
+    private const int OutputLimit = 1_048_576;
+    private const int TimeoutMs = 10_000;
 
     private static readonly SemaphoreSlim Gate = new(1, 1);
 
-    private const int TimeoutMs = 5_000;
-    // ref: https://github.com/LVpuhovs/Programmer-s-Challenge/blob/dcab6d79a4962908a8345359b25794d511b5d2d7/Game%20for%20programming/Game.cs#L154
-    public async Task<ExecutionResult> ExecuteAsync(string code, CancellationToken ct)
+    private static readonly string[] DefaultImports =
     {
-        await Gate.WaitAsync(ct);
+        "System",
+        "System.Collections.Generic",
+        "System.IO",
+        "System.Linq",
+        "System.Text",
+        "System.Threading",
+        "System.Threading.Tasks"
+    };
 
-        string? tempDirectory = null;
-        var stdoutBuilder = new StringBuilder(OutputLimit * 2);
-        var stderrBuilder = new StringBuilder(OutputLimit * 2);
-        var sw = Stopwatch.StartNew();
-
-        try
-        {
-            var source = WrapSubmission(code);
-            var parseOptions = CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Latest);
-            var syntaxTree = CSharpSyntaxTree.ParseText(source, parseOptions);
-
-            var compilation = CSharpCompilation.Create(
-                assemblyName: $"Submission_{Guid.NewGuid():N}",
-                syntaxTrees: new[] { syntaxTree },
-                references: MetadataReferences.Value,
-                options: new CSharpCompilationOptions(OutputKind.ConsoleApplication, optimizationLevel: OptimizationLevel.Release));
-
-            var diagnostics = compilation.GetDiagnostics();
-            var errors = diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error).ToList();
-            if (errors.Count > 0)
-            {
-                IList<ModelDiagnostic> mapped = errors.Select(MapDiagnostic).ToList();
-                return BuildResult(Outcome.CompileError, stdoutBuilder.ToString(), stderrBuilder.ToString(), sw.ElapsedMilliseconds, false, mapped);
-            }
-
-            tempDirectory = CreateTempDirectory();
-            var assemblyPath = Path.Combine(tempDirectory, "submission.dll");
-            var runtimeConfigPath = Path.Combine(tempDirectory, "submission.runtimeconfig.json");
-
-            WriteRuntimeConfig(runtimeConfigPath);
-
-            var emitResult = compilation.Emit(assemblyPath);
-            if (!emitResult.Success)
-            {
-                IList<ModelDiagnostic> mapped = emitResult.Diagnostics
-                    .Where(d => d.Severity == DiagnosticSeverity.Error)
-                    .Select(MapDiagnostic)
-                    .ToList();
-                return BuildResult(Outcome.CompileError, stdoutBuilder.ToString(), stderrBuilder.ToString(), sw.ElapsedMilliseconds, false, mapped);
-            }
-
-            var startInfo = new ProcessStartInfo("dotnet")
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = tempDirectory
-            };
-
-            startInfo.ArgumentList.Add("exec");
-            startInfo.ArgumentList.Add("--runtimeconfig");
-            startInfo.ArgumentList.Add(runtimeConfigPath);
-            startInfo.ArgumentList.Add(assemblyPath);
-
-            using var process = Process.Start(startInfo);
-            if (process is null)
-            {
-                stderrBuilder.AppendLine("Failed to start execution process.");
-                return BuildResult(Outcome.RuntimeError, stdoutBuilder.ToString(), stderrBuilder.ToString(), sw.ElapsedMilliseconds, false, []);
-            }
-
-            var readStdoutTask = ReadStreamAsync(process.StandardOutput, stdoutBuilder);
-            var readStderrTask = ReadStreamAsync(process.StandardError, stderrBuilder);
-
-            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            timeoutCts.CancelAfter(TimeSpan.FromMilliseconds(TimeoutMs));
-
-            try
-            {
-                await process.WaitForExitAsync(timeoutCts.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                TryKill(process);
-                await process.WaitForExitAsync();
-                await Task.WhenAll(readStdoutTask, readStderrTask);
-                return BuildResult(Outcome.Timeout, stdoutBuilder.ToString(), stderrBuilder.ToString(), sw.ElapsedMilliseconds, true, []);
-            }
-
-            await Task.WhenAll(readStdoutTask, readStderrTask);
-
-            if (process.ExitCode == 0)
-            {
-                return BuildResult(Outcome.Success, stdoutBuilder.ToString(), stderrBuilder.ToString(), sw.ElapsedMilliseconds, false, []);
-            }
-
-            return BuildResult(Outcome.RuntimeError, stdoutBuilder.ToString(), stderrBuilder.ToString(), sw.ElapsedMilliseconds, false, []);
-        }
-        finally
-        {
-            if (tempDirectory is not null)
-            {
-                TryDeleteDirectory(tempDirectory);
-            }
-
-            Gate.Release();
-        }
-    }
-
-    static ModelDiagnostic MapDiagnostic(Microsoft.CodeAnalysis.Diagnostic d)
-    {
-        var span = d.Location.GetLineSpan();
-        return new ModelDiagnostic
-        {
-            Id = d.Id,
-            Severity = d.Severity switch
-            {
-                DiagnosticSeverity.Hidden => Severity.Hidden,
-                DiagnosticSeverity.Info => Severity.Info,
-                DiagnosticSeverity.Warning => Severity.Warning,
-                _ => Severity.Error
-            },
-            Message = d.GetMessage(),
-            Line = span.StartLinePosition.Line + 1,
-            Column = span.StartLinePosition.Character + 1
-        };
-    }
-
-    static readonly Lazy<IReadOnlyList<MetadataReference>> MetadataReferences = new(() =>
+    private static readonly Lazy<IReadOnlyList<MetadataReference>> MetadataReferences = new(() =>
     {
         var trusted = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string ?? string.Empty;
         return trusted
@@ -152,134 +41,223 @@ public class CodeExecutionService : ICodeExecutionService
             .ToArray();
     });
 
-    static void WriteRuntimeConfig(string path)
-    {
-        var version = RuntimeFrameworkVersion.Value;
-        var runtimeConfig = $"{{\n  \"runtimeOptions\": {{\n    \"tfm\": \"net9.0\",\n    \"framework\": {{\n      \"name\": \"Microsoft.NETCore.App\",\n      \"version\": \"{version}\"\n    }}\n  }}\n}}\n";
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllText(path, runtimeConfig);
-    }
+    private static readonly ScriptOptions ScriptOptions = Microsoft.CodeAnalysis.Scripting.ScriptOptions.Default
+        .WithReferences(MetadataReferences.Value)
+        .WithImports(DefaultImports);
 
-    static async Task ReadStreamAsync(StreamReader reader, StringBuilder builder)
+    public async Task<ExecutionResult> ExecuteAsync(string code, CancellationToken ct)
     {
-        var buffer = new char[4096];
-        while (true)
-        {
-            var read = await reader.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
-            if (read == 0)
-            {
-                break;
-            }
+        await Gate.WaitAsync(ct).ConfigureAwait(false);
 
-            if (builder.Length < OutputLimit * 2)
-            {
-                var allowed = Math.Min(read, OutputLimit * 2 - builder.Length);
-                builder.Append(buffer, 0, allowed);
-            }
-        }
-    }
+        var stdoutWriter = new BoundedStringWriter(OutputLimit);
+        var stderrWriter = new BoundedStringWriter(OutputLimit);
+        var stopwatch = Stopwatch.StartNew();
 
-    static void TryKill(Process process)
-    {
+        var originalOut = Console.Out;
+        var originalErr = Console.Error;
+        var consoleRedirected = false;
+
         try
         {
-            if (!process.HasExited)
+            var script = CSharpScript.Create(code, ScriptOptions.WithFilePath("UserSubmission.csx"));
+            var diagnostics = script.Compile();
+            var errors = diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error).ToList();
+            if (errors.Count > 0)
             {
-                process.Kill(entireProcessTree: true);
+                return BuildResult(Outcome.CompileError, stdoutWriter, stderrWriter, stopwatch.ElapsedMilliseconds, false, errors.Select(MapDiagnostic));
+            }
+
+            Console.SetOut(stdoutWriter);
+            Console.SetError(stderrWriter);
+            consoleRedirected = true;
+
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            var runTask = script.RunAsync(cancellationToken: timeoutCts.Token);
+            var timeoutTask = Task.Delay(TimeoutMs, ct);
+            var completedTask = await Task.WhenAny(runTask, timeoutTask).ConfigureAwait(false);
+            if (completedTask != runTask)
+            {
+                if (ct.IsCancellationRequested)
+                {
+                    timeoutCts.Cancel();
+                    throw new OperationCanceledException(ct);
+                }
+
+                timeoutCts.Cancel();
+                return BuildResult(Outcome.Timeout, stdoutWriter, stderrWriter, stopwatch.ElapsedMilliseconds, true, Enumerable.Empty<ModelDiagnostic>());
+            }
+
+            try
+            {
+                await runTask.ConfigureAwait(false);
+                return BuildResult(Outcome.Success, stdoutWriter, stderrWriter, stopwatch.ElapsedMilliseconds, false, Enumerable.Empty<ModelDiagnostic>());
+            }
+            catch (CompilationErrorException ex)
+            {
+                return BuildResult(Outcome.CompileError, stdoutWriter, stderrWriter, stopwatch.ElapsedMilliseconds, false, ex.Diagnostics.Select(MapDiagnostic));
+            }
+            catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+            {
+                return BuildResult(Outcome.Timeout, stdoutWriter, stderrWriter, stopwatch.ElapsedMilliseconds, true, Enumerable.Empty<ModelDiagnostic>());
+            }
+            catch (Exception ex)
+            {
+                stderrWriter.WriteLine(ex.ToString());
+                return BuildResult(Outcome.RuntimeError, stdoutWriter, stderrWriter, stopwatch.ElapsedMilliseconds, false, Enumerable.Empty<ModelDiagnostic>());
             }
         }
-        catch
+        finally
         {
-            // ignored
-        }
-    }
-
-    static string CreateTempDirectory()
-    {
-        var path = Path.Combine(Path.GetTempPath(), "codeapi", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(path);
-        return path;
-    }
-
-    static void TryDeleteDirectory(string path)
-    {
-        try
-        {
-            if (Directory.Exists(path))
+            if (consoleRedirected)
             {
-                Directory.Delete(path, recursive: true);
+                Console.SetOut(originalOut);
+                Console.SetError(originalErr);
             }
-        }
-        catch
-        {
-            // best effort
+
+            Gate.Release();
         }
     }
 
-    static string WrapSubmission(string code)
+    private static ModelDiagnostic MapDiagnostic(Microsoft.CodeAnalysis.Diagnostic diagnostic)
     {
-        var builder = new StringBuilder();
-        builder.AppendLine("#nullable enable");
-        builder.AppendLine("using System;");
-        builder.AppendLine("using System.Threading.Tasks;");
-        builder.AppendLine("using System.Linq;");
-        builder.AppendLine("using System.Collections.Generic;");
-        builder.AppendLine();
-        builder.AppendLine("public static class SubmissionEntry");
-        builder.AppendLine("{");
-        builder.AppendLine("    public static async Task<int> Main(string[] args)");
-        builder.AppendLine("    {");
-        builder.AppendLine("        try");
-        builder.AppendLine("        {");
-        builder.AppendLine("#line 1 \"UserSubmission\"");
-        builder.AppendLine(code);
-        builder.AppendLine("#line default");
-        builder.AppendLine("            return 0;");
-        builder.AppendLine("        }");
-        builder.AppendLine("        catch (Exception ex)");
-        builder.AppendLine("        {");
-        builder.AppendLine("            Console.Error.WriteLine(ex);");
-        builder.AppendLine("            return 1;");
-        builder.AppendLine("        }");
-        builder.AppendLine("    }");
-        builder.AppendLine("}");
-        return builder.ToString();
-    }
-
-    static readonly Lazy<string> RuntimeFrameworkVersion = new(() =>
-    {
-        try
+        var location = diagnostic.Location;
+        var line = 0;
+        var column = 0;
+        if (location.IsInSource)
         {
-            var assemblyPath = typeof(object).Assembly.Location;
-            var fileVersion = FileVersionInfo.GetVersionInfo(assemblyPath).ProductVersion;
-            if (!string.IsNullOrWhiteSpace(fileVersion))
+            var span = location.GetLineSpan();
+            line = span.StartLinePosition.Line + 1;
+            column = span.StartLinePosition.Character + 1;
+        }
+
+        return new ModelDiagnostic
+        {
+            Id = diagnostic.Id,
+            Severity = diagnostic.Severity switch
             {
-                var plusIndex = fileVersion!.IndexOf('+');
-                return plusIndex >= 0 ? fileVersion[..plusIndex] : fileVersion;
-            }
-        }
-        catch
-        {
-            // fallback below
-        }
+                DiagnosticSeverity.Hidden => Severity.Hidden,
+                DiagnosticSeverity.Info => Severity.Info,
+                DiagnosticSeverity.Warning => Severity.Warning,
+                _ => Severity.Error
+            },
+            Message = diagnostic.GetMessage(),
+            Line = line,
+            Column = column
+        };
+    }
 
-        return Environment.Version.ToString();
-    });
-
-    ExecutionResult BuildResult(Outcome outcome, string outStr, string errStr, long elapsedMs, bool timeout, IList<ModelDiagnostic> diags)
+    private static ExecutionResult BuildResult(
+        Outcome outcome,
+        BoundedStringWriter stdoutWriter,
+        BoundedStringWriter stderrWriter,
+        long elapsedMs,
+        bool timeout,
+        IEnumerable<ModelDiagnostic> diagnostics)
     {
-        var truncatedOut = outStr.Length >= OutputLimit;
-        var truncatedErr = errStr.Length >= OutputLimit;
-        var stdout = truncatedOut ? outStr[..OutputLimit] : outStr;
-        var stderr = truncatedErr ? errStr[..OutputLimit] : errStr;
         return new ExecutionResult
         {
             Outcome = outcome,
-            Stdout = stdout,
-            Stderr = stderr,
-            Diagnostics = diags.ToList(),
+            Stdout = stdoutWriter.ToString(),
+            Stderr = stderrWriter.ToString(),
+            Diagnostics = diagnostics.ToList(),
             DurationMs = (int)Math.Min(int.MaxValue, elapsedMs),
-            Truncated = timeout || truncatedOut || truncatedErr
+            Truncated = timeout || stdoutWriter.IsTruncated || stderrWriter.IsTruncated
         };
+    }
+
+    private sealed class BoundedStringWriter : TextWriter
+    {
+        private readonly int _limit;
+        private readonly StringBuilder _buffer = new();
+
+        public bool IsTruncated { get; private set; }
+
+        public override Encoding Encoding => Encoding.UTF8;
+
+        public BoundedStringWriter(int limit)
+        {
+            _limit = limit;
+        }
+
+        public override void Write(char value)
+        {
+            if (_buffer.Length < _limit)
+            {
+                _buffer.Append(value);
+            }
+            else
+            {
+                IsTruncated = true;
+            }
+        }
+
+        public override void Write(char[]? buffer, int index, int count)
+        {
+            if (buffer is null)
+            {
+                return;
+            }
+
+            var remaining = Math.Max(0, _limit - _buffer.Length);
+            if (remaining <= 0)
+            {
+                IsTruncated = true;
+                return;
+            }
+
+            var sliceCount = Math.Min(count, remaining);
+            _buffer.Append(buffer, index, sliceCount);
+            if (sliceCount < count)
+            {
+                IsTruncated = true;
+            }
+        }
+
+        public override void Write(ReadOnlySpan<char> buffer)
+        {
+            var remaining = Math.Max(0, _limit - _buffer.Length);
+            if (remaining <= 0)
+            {
+                IsTruncated = true;
+                return;
+            }
+
+            if (buffer.Length <= remaining)
+            {
+                _buffer.Append(buffer);
+            }
+            else
+            {
+                _buffer.Append(buffer[..remaining]);
+                IsTruncated = true;
+            }
+        }
+
+        public override void Write(string? value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return;
+            }
+
+            var remaining = Math.Max(0, _limit - _buffer.Length);
+            if (remaining <= 0)
+            {
+                IsTruncated = true;
+                return;
+            }
+
+            if (value.Length <= remaining)
+            {
+                _buffer.Append(value);
+            }
+            else
+            {
+                _buffer.Append(value.AsSpan(0, remaining));
+                IsTruncated = true;
+            }
+        }
+
+        public override string ToString() => _buffer.ToString();
     }
 }

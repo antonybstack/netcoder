@@ -18,5 +18,11 @@ public class Run_SyntaxError_CompileError
         Assert.Equal("CompileError", json!["outcome"]!.GetValue<string>());
         var diagnostics = json["diagnostics"]!.AsArray();
         Assert.True(diagnostics.Count > 0);
+        var diagnostic = diagnostics[0]!.AsObject();
+        Assert.Equal("Error", diagnostic["severity"]!.GetValue<string>());
+        Assert.InRange(diagnostic["line"]!.GetValue<int>(), 1, int.MaxValue);
+        Assert.InRange(diagnostic["column"]!.GetValue<int>(), 1, int.MaxValue);
+        Assert.False(string.IsNullOrWhiteSpace(diagnostic["message"]!.GetValue<string>()));
+        Assert.False(string.IsNullOrWhiteSpace(diagnostic["id"]!.GetValue<string>()));
     }
 }

@@ -1,15 +1,15 @@
 <!--
 Sync Impact Report
-- Version change: 1.1.0 → 1.2.0
+- Version change: 1.2.0 → 1.3.0
 - Modified principles / sections:
-  - Frontend (Angular 20 & Signals): HTTP Resource API is REQUIRED; RxJS-based HttpClient patterns are prohibited for API handling unless justified in the plan's Constitution Check.
-  - Development Workflow & Quality Gates: Added explicit testing frameworks (xUnit for .NET) and CLI scaffolding policy.
+  - Development Workflow & Quality Gates: Added "Always‑Green Build & Continuous Verification" principle with local build/test cadence and CI gating.
 - Added sections: none
 - Removed sections: none
 - Templates requiring updates:
-  - .specify/templates/plan-template.md ✅ updated (gates: Resource API, test frameworks, CLI scaffolding)
-  - .specify/templates/tasks-template.md ✅ updated (setup tasks for xUnit; CLI scaffolding)
+  - .specify/templates/plan-template.md ✅ updated (Tests & Quality Gates includes always‑green build gate)
+  - .specify/templates/tasks-template.md ✅ updated (validation checklist adds build/test pass gate)
   - .specify/templates/spec-template.md ✅ no change required
+- Follow-up TODOs: None
 -->
 
 # Netcoder Constitution
@@ -48,7 +48,7 @@ Sync Impact Report
 
 #### DO NOT
 
-- DO NOT Use unit testing
+- DO NOT write comments
 - DO NOT Use RxJS-based patterns for HTTP handling unless a clear, documented justification is provided.
 - DO NOT Use zone.js; prefer zoneless mode.
 - DO NOT Use `*ngIf`, `*ngFor`, `ngSwitch` or other structural directives inappropriately; prefer using the new control flow syntax such as `@if`, `@for`, etc.
@@ -141,6 +141,19 @@ deployments.
 - Scaffolding & Code Generation: Prefer official CLI tools (e.g., `ng generate`, `dotnet new`)
   for generating templates/boilerplate to stay current with framework best practices.
 
+### 7.1 Always‑Green Build & Continuous Verification
+
+- The default branch (and shared branches) MUST remain green: build succeeds and all
+  required tests pass at all times.
+- Contributors MUST run local builds and tests frequently and BEFORE committing/pushing.
+  Example commands: `dotnet build`, `dotnet test`, `ng build`, `ng test` (frontend tests
+  are optional per this constitution; if present, they MUST pass).
+- After rebasing or merging, run the full local suite again to catch integration issues early.
+- CI MUST gate merges with build and test jobs for backend (.NET) and, where applicable,
+  frontend. Red pipelines MUST block merges to protected branches.
+- If a shared branch turns red, owners MUST fix forward or revert within 15 minutes.
+  Do not commit partial or incomplete code that fails to compile.
+
 ## Governance
 
 Amendments to this Constitution follow a lightweight governance process:
@@ -159,4 +172,4 @@ Versioning policy:
 - MINOR: Addition of new principle(s) or material expansion of guidance.
 - PATCH: Wording clarifications, typo fixes, or non-semantic refinements.
 
-**Version**: 1.2.0 | **Ratified**: 2025-09-27 | **Last Amended**: 2025-09-28
+**Version**: 1.3.0 | **Ratified**: 2025-09-27 | **Last Amended**: 2025-11-01

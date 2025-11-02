@@ -17,6 +17,8 @@ public class Run_InfiniteLoop_TimesOut
         Assert.NotNull(json);
         Assert.Equal("Timeout", json!["outcome"]!.GetValue<string>());
         Console.WriteLine(json["durationMs"]!.GetValue<int>());
-        Assert.InRange(json["durationMs"]!.GetValue<int>(), 3000, 15000);
+        Assert.InRange(json["durationMs"]!.GetValue<int>(), 9000, 14000);
+        Assert.True(json["truncated"]!.GetValue<bool>());
+        Assert.Empty(json["diagnostics"]!.AsArray());
     }
 }

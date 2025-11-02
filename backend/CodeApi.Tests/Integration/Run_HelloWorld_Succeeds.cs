@@ -18,6 +18,9 @@ public class Run_HelloWorld_Succeeds
         Assert.Equal("Success", json!["outcome"]!.GetValue<string>());
         var stdout = json["stdout"]!.GetValue<string>();
         Assert.Contains("Hello, world!", stdout);
+        Assert.Equal(string.Empty, json["stderr"]!.GetValue<string>());
+        Assert.Empty(json["diagnostics"]!.AsArray());
         Assert.False(json["truncated"]!.GetValue<bool>());
+        Assert.InRange(json["durationMs"]!.GetValue<int>(), 0, 2_000);
     }
 }

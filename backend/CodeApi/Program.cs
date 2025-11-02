@@ -16,11 +16,23 @@ builder.Services.AddControllers().AddJsonOptions(o =>
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<ICodeExecutionService, CodeExecutionService>();
 
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("dev", policy => policy
+            .WithOrigins("http://localhost:4200", "http://localhost:5173", "http://localhost:26200")
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+    });
+}
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseCors("dev");
 }
 
 app.UseAuthorization();

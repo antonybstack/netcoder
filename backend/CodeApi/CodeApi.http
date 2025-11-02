@@ -1,10 +1,6 @@
 @CodeApi_HostAddress = http://localhost:5189
 
-GET {{CodeApi_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
-
+### Hello World
 POST {{CodeApi_HostAddress}}/api/exec/run
 Content-Type: application/json
 
@@ -12,7 +8,7 @@ Content-Type: application/json
   "code": "Console.WriteLine(\"Hello, world!\");"
 }
 
-###
+### Syntax Error
 POST {{CodeApi_HostAddress}}/api/exec/run
 Content-Type: application/json
 
@@ -20,17 +16,15 @@ Content-Type: application/json
   "code": "Console.WriteLine(\"OOPS\");"
 }
 
-###
-
+### Timeout (~10s)
 POST {{CodeApi_HostAddress}}/api/exec/run
 Content-Type: application/json
 
 {
-  "code": "while(true) { }"
+  "code": "await Task.Delay(11000);"
 }
 
-###
-
+### Large Output Truncation
 POST {{CodeApi_HostAddress}}/api/exec/run
 Content-Type: application/json
 
