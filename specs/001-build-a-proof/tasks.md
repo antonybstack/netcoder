@@ -203,10 +203,10 @@ cd /Users/antbly/dev/netcoder/backend/CodeApi.Tests; dotnet test --filter FullyQ
 
 ## Validation Checklist
 
-- [ ] All contracts have corresponding tests (contracts/openapi.yaml → T006)
-- [ ] Entities/tasks align with data model (CodeSubmission, Diagnostic, ExecutionResult)
-- [ ] Tests (T006–T010) come before implementation (T011–T013)
-- [ ] [P] tasks operate on different files
-- [ ] Each task lists exact file paths
-- [ ] Dev CORS configured for frontend ↔ backend in development
-- [ ] Testing frameworks align with Constitution (.NET → xUnit)
+- [X] All contracts have corresponding tests (contracts/openapi.yaml → T006)
+- [X] Entities/tasks align with data model (CodeSubmission, Diagnostic, ExecutionResult)
+- [X] Tests (T006–T010) come before implementation (T011–T013)
+- [X] [P] tasks operate on different files
+- [X] Each task lists exact file paths
+- [X] Dev CORS configured for frontend ↔ backend in development
+- [X] Testing frameworks align with Constitution (.NET → xUnit)
