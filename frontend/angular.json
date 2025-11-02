@@ -19,11 +19,14 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "codicon.ttf",
+                "input": "node_modules/monaco-editor/esm/vs/base/browser/ui/codicons/codicon",
+                "output": "assets/monaco"
               }
             ],
-            "styles": [
-              "src/styles.css"
-            ]
+            "styles": ["src/styles.css"]
           },
           "configurations": {
             "production": {
@@ -52,7 +55,8 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
-            "port": 26200
+            "port": 26200,
+            "proxyConfig": "proxy.conf.json"
           },
           "configurations": {
             "production": {
@@ -71,15 +75,20 @@
           "builder": "@angular/build:karma",
           "options": {
             "tsConfig": "tsconfig.spec.json",
+            "karmaConfig": "karma.conf.js",
+            "polyfills": ["zone.js", "zone.js/testing"],
             "assets": [
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "codicon.ttf",
+                "input": "node_modules/monaco-editor/esm/vs/base/browser/ui/codicons/codicon",
+                "output": "assets/monaco"
               }
             ],
-            "styles": [
-              "src/styles.css"
-            ]
+            "styles": ["src/styles.css"]
           }
         }
       }

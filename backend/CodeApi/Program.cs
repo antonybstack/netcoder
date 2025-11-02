@@ -1,23 +1,42 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using CodeApi.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddControllers().AddJsonOptions(o =>
+{
+    var jsonOptions = o.JsonSerializerOptions;
+    jsonOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    jsonOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+    jsonOptions.Converters.Add(new JsonStringEnumConverter());
+});
 builder.Services.AddOpenApi();
+builder.Services.AddScoped<ICodeExecutionService, CodeExecutionService>();
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("dev", policy => policy
+            .WithOrigins("http://localhost:4200", "http://localhost:5173", "http://localhost:26200")
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+    });
+}
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseCors("dev");
 }
 
-app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
+
+public partial class Program { }

@@ -1,1 +1,90 @@
-<p>TODO</p>
+<div class="flex flex-col gap-6 p-6">
+  <section class="space-y-4">
+    <header class="flex flex-wrap items-center justify-between gap-3">
+      <div class="flex flex-wrap items-center gap-2">
+        <button class="btn btn-primary" type="button" (click)="run()">Run</button>
+        <button class="btn btn-outline" type="button" (click)="clear()">Clear History</button>
+      </div>
+      @if (inflight() > 0) {
+      <span class="badge badge-info badge-outline animate-pulse">Running ({{ inflight() }})</span>
+      }
+    </header>
+    <div class="rounded-2xl border border-base-300 bg-base-200/60 p-2 shadow-inner">
+      <div
+        #editor
+        aria-label="C# editor"
+        class="code-editor rounded-xl bg-base-200/40"
+      ></div>
+    </div>
+  </section>
+
+  <section class="space-y-4">
+    <header class="flex items-center justify-between">
+      <h3 class="text-lg font-semibold text-base-content">Execution Results</h3>
+      <span class="text-sm text-base-content/70">Latest first</span>
+    </header>
+    @if (results().length === 0) {
+    <div class="alert alert-info">
+      <span>No runs yet. Write some C# and press Run to see the output.</span>
+    </div>
+    } @else {
+    <div class="grid gap-4">
+      @for (r of results(); track $index) {
+      <article class="card bg-base-100 shadow-lg">
+        <div class="card-body space-y-4">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="badge badge-primary">{{ r.outcome }}</span>
+            <span class="badge badge-ghost">{{ r.durationMs }} ms</span>
+            @if (r.truncated) {
+            <span class="badge badge-warning badge-outline">truncated</span>
+            }
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <div class="space-y-2">
+              <h4 class="text-sm font-semibold uppercase tracking-wide text-base-content/70">
+                stdout
+              </h4>
+              <pre class="code-block">{{ r.stdout || '⟨empty⟩' }}</pre>
+            </div>
+            <div class="space-y-2">
+              <h4 class="text-sm font-semibold uppercase tracking-wide text-base-content/70">
+                stderr
+              </h4>
+              <pre class="code-block">{{ r.stderr || '⟨empty⟩' }}</pre>
+            </div>
+          </div>
+
+          @if (r.diagnostics.length > 0) {
+          <div class="overflow-x-auto">
+            <table class="table table-zebra table-xs">
+              <thead>
+                <tr class="uppercase text-xs text-base-content/70">
+                  <th scope="col">Id</th>
+                  <th scope="col">Severity</th>
+                  <th scope="col">Line</th>
+                  <th scope="col">Column</th>
+                  <th scope="col">Message</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (d of r.diagnostics; track $index) {
+                <tr>
+                  <td class="font-mono text-xs">{{ d.id || '—' }}</td>
+                  <td>{{ d.severity }}</td>
+                  <td>{{ d.line }}</td>
+                  <td>{{ d.column }}</td>
+                  <td class="whitespace-pre-wrap">{{ d.message }}</td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          }
+        </div>
+      </article>
+      }
+    </div>
+    }
+  </section>
+</div>

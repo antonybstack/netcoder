@@ -5,7 +5,7 @@
 
 ## Execution Flow (/plan command scope)
 
-```
+```text
 1. Load feature spec from Input path
    → If not found: ERROR "No feature spec at {path}"
 2. Fill Technical Context (scan for NEEDS CLARIFICATION)
@@ -65,14 +65,17 @@ following gates apply:
   CI, and how health/metrics/admin endpoints are separated or namespaced.
 - Technology Alignment: If the project includes frontend or backend components, the
   plan MUST state how it aligns with the mandated stack (Frontend: Angular 20 zoneless,
-  Tailwind v4; Backend: .NET 10 minimal APIs) or justify deviations.
+  Tailwind v4; Backend: .NET 9 minimal APIs) or justify deviations.
 - Frontend HTTP API handling (Angular only): Plans MUST use Angular's Resource API for
   HTTP/data fetching. RxJS-based HttpClient patterns are PROHIBITED for API handling
   unless explicitly justified with a rationale and migration plan.
 - Tests & Quality Gates: Confirm unit and integration tests and any required contract
   tests; performance testing is OPTIONAL and only required when acceptance criteria
-  specify performance targets. Testing frameworks MUST align with the stack: Angular →
-  Vitest; .NET → xUnit with Microsoft/.NET native test runner/packages.
+  specify performance targets. Testing frameworks MUST align with the stack:
+  .NET → xUnit with Microsoft/.NET native test runner/packages.
+- Always‑Green Build: Plans MUST explain how the team keeps branches green and what
+  local/CI commands are run regularly (e.g., `dotnet build`, `dotnet test`, `ng build`,
+  `ng test` if frontend tests exist). Merges MUST be gated by CI build/test.
 - Observability: Describe logging (structured logs and correlation IDs) and metrics
   exposure for the feature surface.
 - Styling & UX: Frontend plans MUST adopt dark-mode-first Tailwind v4 styling or
@@ -86,7 +89,7 @@ following gates apply:
 
 ### Documentation (this feature)
 
-```
+```text
 specs/[###-feature]/
 ├── plan.md              # This file (/plan command output)
 ├── research.md          # Phase 0 output (/plan command)
@@ -105,7 +108,7 @@ specs/[###-feature]/
   not include Option labels.
 -->
 
-```
+```text
 # [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
 src/
 ├── models/
@@ -152,16 +155,16 @@ directories captured above]
    - For each dependency → best practices task
    - For each integration → patterns task
 
-2. **Generate and dispatch research agents**:
+1. **Generate and dispatch research agents**:
 
-   ```
-   For each unknown in Technical Context:
-     Task: "Research {unknown} for {feature context}"
-   For each technology choice:
-     Task: "Find best practices for {tech} in {domain}"
-   ```
+```text
+For each unknown in Technical Context:
+  Task: "Research {unknown} for {feature context}"
+For each technology choice:
+  Task: "Find best practices for {tech} in {domain}"
+```
 
-3. **Consolidate findings** in `research.md` using format:
+1. **Consolidate findings** in `research.md` using format:
    - Decision: [what was chosen]
    - Rationale: [why chosen]
    - Alternatives considered: [what else evaluated]
@@ -170,7 +173,7 @@ directories captured above]
 
 ## Phase 1: Design & Contracts
 
-_Prerequisites: research.md complete_
+Prerequisite: research.md complete
 
 1. **Extract entities from feature spec** → `data-model.md`:
 
@@ -178,24 +181,24 @@ _Prerequisites: research.md complete_
    - Validation rules from requirements
    - State transitions if applicable
 
-2. **Generate API contracts** from functional requirements:
+1. **Generate API contracts** from functional requirements:
 
    - For each user action → endpoint
    - Use standard REST/GraphQL patterns
    - Output OpenAPI/GraphQL schema to `/contracts/`
 
-3. **Generate contract tests** from contracts:
+1. **Generate contract tests** from contracts:
 
    - One test file per endpoint
    - Assert request/response schemas
    - Tests must fail (no implementation yet)
 
-4. **Extract test scenarios** from user stories:
+1. **Extract test scenarios** from user stories:
 
    - Each story → integration test scenario
    - Quickstart test = story validation steps
 
-5. **Update agent file incrementally** (O(1) operation):
+1. **Update agent file incrementally** (O(1) operation):
    - Run `.specify/scripts/bash/update-agent-context.sh copilot`
      **IMPORTANT**: Execute it exactly as specified above. Do not add or remove any arguments.
    - If exists: Add only NEW tech from current plan
@@ -208,7 +211,7 @@ _Prerequisites: research.md complete_
 
 ## Phase 2: Task Planning Approach
 
-_This section describes what the /tasks command will do - DO NOT execute during /plan_
+This section describes what the /tasks command will do - DO NOT execute during /plan
 
 **Task Generation Strategy**:
 
@@ -231,7 +234,7 @@ _This section describes what the /tasks command will do - DO NOT execute during 
 
 ## Phase 3+: Future Implementation
 
-_These phases are beyond the scope of the /plan command_
+These phases are beyond the scope of the /plan command
 
 **Phase 3**: Task execution (/tasks command creates tasks.md)  
 **Phase 4**: Implementation (execute tasks.md following constitutional principles)  
@@ -239,7 +242,7 @@ _These phases are beyond the scope of the /plan command_
 
 ## Complexity Tracking
 
-_Fill ONLY if Constitution Check has violations that must be justified_
+Fill ONLY if Constitution Check has violations that must be justified
 
 | Violation                  | Why Needed         | Simpler Alternative Rejected Because |
 | -------------------------- | ------------------ | ------------------------------------ |
@@ -248,7 +251,7 @@ _Fill ONLY if Constitution Check has violations that must be justified_
 
 ## Progress Tracking
 
-_This checklist is updated during execution flow_
+This checklist is updated during execution flow
 
 **Phase Status**:
 
@@ -268,4 +271,4 @@ _This checklist is updated during execution flow_
 
 ---
 
-_Based on Constitution v1.2.0 - See `/.specify/memory/constitution.md`_
+_Based on Constitution v1.3.0 - See `/.specify/memory/constitution.md`_

@@ -1,0 +1,11 @@
+:host {
+  display: block;
+}
+
+.code-editor {
+  @apply h-[28rem] min-h-[18rem];
+}
+
+.code-block {
+  @apply min-h-[6rem] whitespace-pre-wrap break-words rounded-lg bg-base-200 bg-opacity-70 p-4 font-mono text-sm leading-relaxed text-base-content;
+}
