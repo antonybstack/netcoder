@@ -10,7 +10,7 @@ import {
   output,
   Injector,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 interface SearchItem {
   title: string;
@@ -20,7 +20,7 @@ interface SearchItem {
 @Component({
   selector: 'app-combobox',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './combobox.html',
   styleUrl: './combobox.css',
 })
