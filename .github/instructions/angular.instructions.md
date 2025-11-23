@@ -1,5 +1,5 @@
 ---
-description: Angular 20
+description: Angular 21
 applyTo: "**/*.ts,**/*.html,**/*.css"
 ---
 
@@ -9,7 +9,7 @@ Angular — Deliver web apps with confidence 🚀
 
 ## DO
 
-- DO Use Angular 20 for building web applications.
+- DO Use Angular 21 for building web applications.
 - DO Use Signals API for state management.
 - DO Use Angular Resource API (e.g., httpResource built on HttpClient) for HTTP and data fetching.
 - DO Use Tailwind CSS with a dark-mode-first approach for styling.

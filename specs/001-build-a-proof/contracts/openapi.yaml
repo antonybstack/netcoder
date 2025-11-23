@@ -7,7 +7,7 @@ servers:
 paths:
   /api/exec/run:
     post:
-      summary: Execute C# 13 code snippet
+      summary: Execute C# 14 code snippet
       requestBody:
         required: true
         content:
@@ -29,7 +29,7 @@ components:
       properties:
         code:
           type: string
-          description: C# 13 top-level code
+          description: C# 14 top-level code
           maxLength: 1048576
         requestId:
           type: string

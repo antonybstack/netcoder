@@ -1,4 +1,4 @@
-# Tasks: Interactive C# 13 Code Execution PoC (Backend-first)
+# Tasks: Interactive C# 14 Code Execution PoC (Backend-first)
 
 Feature Dir: /Users/antbly/dev/netcoder/specs/001-build-a-proof
 
@@ -26,14 +26,14 @@ Conventions:
 
 ## Phase 3.1: Setup
 
-- [X] T001 Backend dev CORS policy (localhost)
+- [x] T001 Backend dev CORS policy (localhost)
 
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi/Program.cs
   - Actions:
     - Add permissive CORS policy for `http://localhost:4200` (Angular dev) and `http://localhost:5173` (Vite), enabled only in Development.
     - Map policy name to UseCors before MapControllers.
 
-- [X] T002 Enforce 10s execution timeout (spec alignment)
+- [x] T002 Enforce 10s execution timeout (spec alignment)
 
   - Files:
     - /Users/antbly/dev/netcoder/backend/CodeApi/Services/CodeExecutionService.cs
@@ -42,7 +42,7 @@ Conventions:
     - Set TimeoutMs to 10_000 in service.
     - Update test assertion to expect ≈10_000 ms (e.g., Assert.InRange(durationMs, 9000, 14000)).
 
-- [X] T003 Decide and align execution engine with research (Roslyn scripting)
+- [x] T003 Decide and align execution engine with research (Roslyn scripting)
 
   - Files:
     - /Users/antbly/dev/netcoder/backend/CodeApi/Services/CodeExecutionService.cs
@@ -54,7 +54,7 @@ Conventions:
     - Ensure packages Microsoft.CodeAnalysis.CSharp.Scripting and Microsoft.CodeAnalysis.Scripting.Common are referenced (already present) and remove unused external process logic.
     - If choosing to keep external process approach instead, update research.md and plan.md to reflect the actual approach and rationale.
 
-- [X] T004 Frontend styling stack (Tailwind v4 + daisyUI 5)
+- [x] T004 Frontend styling stack (Tailwind v4 + daisyUI 5)
 
   - Files/Dirs:
     - /Users/antbly/dev/netcoder/frontend/package.json
@@ -64,7 +64,7 @@ Conventions:
     - Install Tailwind v4 and daisyUI; configure per `/.github/instructions/daisyui.instructions.md` and Angular guidelines in `/.github/instructions/angular.instructions.md`.
     - Apply base styles; ensure dark mode works.
 
-- [X] T005 Frontend editor dependency (Monaco Editor)
+- [x] T005 Frontend editor dependency (Monaco Editor)
   - Files:
     - /Users/antbly/dev/netcoder/frontend/package.json
     - /Users/antbly/dev/netcoder/frontend/src/app/components/code-page/code-page.ts
@@ -77,27 +77,27 @@ Conventions:
 
 ## Phase 3.2: Tests First (must fail initially where behavior changes)
 
-- [X] T006 [P] Contract test for POST /api/exec/run
+- [x] T006 [P] Contract test for POST /api/exec/run
 
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi.Tests/Contract/OpenApi_Contract_ExecRun.cs
   - Behavior: Assert response JSON has required fields per openapi.yaml (outcome, stdout, stderr, diagnostics[], durationMs, truncated).
 
-- [X] T007 [P] Integration: Hello World success
+- [x] T007 [P] Integration: Hello World success
 
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi.Tests/Integration/Run_HelloWorld_Succeeds.cs
   - Behavior: POST code Console.WriteLine("Hello, world!"); → outcome=Success, stdout contains Hello, world!, truncated=false.
 
-- [X] T008 [P] Integration: Compile error diagnostics
+- [x] T008 [P] Integration: Compile error diagnostics
 
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi.Tests/Integration/Run_SyntaxError_CompileError.cs
   - Behavior: POST invalid code; expect outcome=CompileError and diagnostics non-empty with approximate line/column.
 
-- [X] T009 [P] Integration: Timeout at ~10s
+- [x] T009 [P] Integration: Timeout at ~10s
 
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi.Tests/Integration/Run_InfiniteLoop_TimesOut.cs
   - Behavior: POST infinite wait; expect outcome=Timeout; durationMs ~ 10s (assert reasonable range).
 
-- [X] T010 [P] Integration: Output truncation at 1 MB
+- [x] T010 [P] Integration: Output truncation at 1 MB
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi.Tests/Integration/Run_LargeOutput_Truncated.cs
   - Behavior: POST code writing >1 MB to stdout; expect truncated=true and stdout length ≤ 1 MB.
 
@@ -105,7 +105,7 @@ Conventions:
 
 ## Phase 3.3: Core Implementation (make tests pass)
 
-- [X] T011 Service implementation aligned with research (Roslyn scripting)
+- [x] T011 Service implementation aligned with research (Roslyn scripting)
 
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi/Services/CodeExecutionService.cs
   - Actions:
@@ -113,7 +113,7 @@ Conventions:
     - Redirect Console.Out/Err to capture up to 1 MB; set truncated flag when exceeded.
     - Map Roslyn diagnostics (id, severity, message, 1-based line/column) anchored to the user snippet.
 
-- [X] T012 Endpoint validations and logging
+- [x] T012 Endpoint validations and logging
 
   - Files:
     - /Users/antbly/dev/netcoder/backend/CodeApi/Controllers/ExecController.cs
@@ -122,7 +122,7 @@ Conventions:
     - Ensure non-empty code and length ≤ 1 MB validations.
     - Log requestId, outcome, durationMs as structured fields.
 
-- [X] T013 Dev CORS wiring
+- [x] T013 Dev CORS wiring
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi/Program.cs
   - Actions:
     - Apply the policy created in T001 via app.UseCors("dev").
@@ -131,18 +131,18 @@ Conventions:
 
 ## Phase 3.4: Integration
 
-- [X] T014 [P] Developer HTTP examples
+- [x] T014 [P] Developer HTTP examples
 
   - Files: /Users/antbly/dev/netcoder/backend/CodeApi/CodeApi.http
   - Actions: Add Hello World, Syntax Error, Timeout, Large Output examples with JSON bodies.
 
-- [X] T015 Frontend API client: Angular Resource API
+- [x] T015 Frontend API client: Angular Resource API
 
   - Files: /Users/antbly/dev/netcoder/frontend/src/app/services/api.service.ts
   - Actions:
-    - Replace direct fetch with Angular Resource API per Angular 20 guidelines; define resource for POST /api/exec/run with types matching CodeSubmission/ExecutionResult.
+    - Replace direct fetch with Angular Resource API per Angular 21 guidelines; define resource for POST /api/exec/run with types matching CodeSubmission/ExecutionResult.
 
-- [X] T016 Frontend UI: Monaco editor and run flow
+- [x] T016 Frontend UI: Monaco editor and run flow
   - Files:
     - /Users/antbly/dev/netcoder/frontend/src/app/components/code-page/code-page.ts
     - /Users/antbly/dev/netcoder/frontend/src/app/components/code-page/code-page.html
@@ -155,7 +155,7 @@ Conventions:
 
 ## Phase 3.5: Polish
 
-- [X] T017 [P] Docs polish and alignment
+- [x] T017 [P] Docs polish and alignment
 
   - Files:
     - /Users/antbly/dev/netcoder/specs/001-build-a-proof/quickstart.md
@@ -166,7 +166,7 @@ Conventions:
     - Add internal-use warning (no sandbox) in README.
     - If approach changed, update research.md to explain rationale.
 
-- [X] T018 [P] Performance smoke check
+- [x] T018 [P] Performance smoke check
   - Files: N/A (manual doc entry in quickstart.md)
   - Actions: Measure p95 for Hello World end-to-end ≤ 2s on dev machine; record results.
 
@@ -203,10 +203,10 @@ cd /Users/antbly/dev/netcoder/backend/CodeApi.Tests; dotnet test --filter FullyQ
 
 ## Validation Checklist
 
-- [X] All contracts have corresponding tests (contracts/openapi.yaml → T006)
-- [X] Entities/tasks align with data model (CodeSubmission, Diagnostic, ExecutionResult)
-- [X] Tests (T006–T010) come before implementation (T011–T013)
-- [X] [P] tasks operate on different files
-- [X] Each task lists exact file paths
-- [X] Dev CORS configured for frontend ↔ backend in development
-- [X] Testing frameworks align with Constitution (.NET → xUnit)
+- [x] All contracts have corresponding tests (contracts/openapi.yaml → T006)
+- [x] Entities/tasks align with data model (CodeSubmission, Diagnostic, ExecutionResult)
+- [x] Tests (T006–T010) come before implementation (T011–T013)
+- [x] [P] tasks operate on different files
+- [x] Each task lists exact file paths
+- [x] Dev CORS configured for frontend ↔ backend in development
+- [x] Testing frameworks align with Constitution (.NET → xUnit)

@@ -22,9 +22,9 @@ Sync Impact Report
 - TLS/SSL termination and public-facing security will be handled by external networking infrastructure (e.g., Cloudflare Tunnel, edge proxy).
 - The project prioritises integration and end-to-end testing over unit tests.
 
-### 2. Frontend: Angular 20
+### 2. Frontend: Angular 21
 
-- Frontend applications MUST use Angular 20 in zoneless mode (avoids zone.js).'
+- Frontend applications MUST use Angular 21 in zoneless mode (avoids zone.js).'
 - The Signals API MUST be used for state management.
 - For HTTP and data fetching, the Angular Resource API (for example, httpResource built on HttpClient) MUST be used so that
 - request state and responses are available as Signals.
@@ -35,7 +35,7 @@ Sync Impact Report
 
 #### DO
 
-- DO Use Angular 20 for building web applications.
+- DO Use Angular 21 for building web applications.
 - DO Use Signals API for state management.
 - DO Use Angular Resource API (e.g., httpResource built on HttpClient) for HTTP and data fetching.
 - DO Use Tailwind CSS with a dark-mode-first approach for styling.
@@ -58,14 +58,14 @@ Sync Impact Report
 
 ### 3. Backend: .NET
 
-- Backend services MUST be implemented on .NET 9 using controller APIs.
+- Backend services MUST be implemented on .NET 10 using controller APIs.
 - Database access MUST use Entity Framework Core.
 - Project structure MUST follow .NET best practices and conventions.
 - Maintain .http files for API testing and documentation.
 
 #### DO
 
-- DO USE .NET 9 and C# 13 or later for building backend services.
+- DO USE .NET 10 and C# 14 or later for building backend services.
 - DO USE Native dependency injection (DI) MUST be used for managing dependencies.
 - DO USE Asynchronous programming (async/await) MUST be used for I/O-bound operations.
 - DO USE Cancellation tokens and pass them in all async methods to allow for graceful cancellation.
@@ -97,11 +97,11 @@ Sync Impact Report
 
 ## 5. Technology Stack & Constraints
 
-- Frontend: Angular 20 (zoneless), Signals API preferred; avoid RxJS unless justified.
+- Frontend: Angular 21 (zoneless), Signals API preferred; avoid RxJS unless justified.
 - Angular HTTP: Resource API MUST be used for HTTP/data fetching; RxJS patterns for HTTP are
   prohibited unless justified in the Constitution Check.
 - Styling: Tailwind CSS v4, dark-mode-first; use vetted OSS Tailwind libraries as needed.
-- Backend: .NET 9.
+- Backend: .NET 10.
 - Deployment model: Containerised (Docker) services; internal traffic MAY be non-HTTPS.
 - Public TLS/HTTP/3: Managed externally (Cloudflare Tunnel or equivalent edge proxy).
 - Networking: Minimise outbound calls; design for batched/efficient communication.

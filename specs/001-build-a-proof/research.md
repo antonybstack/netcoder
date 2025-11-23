@@ -1,10 +1,10 @@
-# Phase 0 Research: Interactive C# 13 Code Execution PoC
+# Phase 0 Research: Interactive C# 14 Code Execution PoC
 
 ## Decisions
 
 ### Execution Engine
 
-- Decision: Use Roslyn C# scripting (Microsoft.CodeAnalysis.CSharp.Scripting) to execute user-submitted top-level C# 13 code.
+- Decision: Use Roslyn C# scripting (Microsoft.CodeAnalysis.CSharp.Scripting) to execute user-submitted top-level C# 14 code.
 - Rationale: Fast iteration for PoC, no external process; supports top‑level statements; easy to capture diagnostics.
 - Alternatives considered:
   - Compile ephemeral project and run via `dotnet`: Slower, heavier I/O, process management overhead; unnecessary for PoC.
@@ -36,7 +36,7 @@
 
 ### Language & Versioning
 
-- Decision: Target C# 13 semantics on .NET 9 runtime in current repo; ensure Roslyn package versions support C# 13.
+- Decision: Target C# 14 semantics on .NET 10 runtime in current repo; ensure Roslyn package versions support C# 14.
 - Rationale: Aligns with feature spec and current backend.
 
 ## Implementation Notes (feed into Phase 1)

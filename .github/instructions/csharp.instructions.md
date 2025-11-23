@@ -7,7 +7,7 @@ applyTo: "**/*.cs,**/*.csproj,**/*.sln"
 
 ## DO
 
-- DO USE .NET 9 and C# 13 or later for building backend services.
+- DO USE .NET 10 and C# 14 or later for building backend services.
 - DO USE Native dependency injection (DI) MUST be used for managing dependencies.
 - DO USE Asynchronous programming (async/await) MUST be used for I/O-bound operations.
 - DO USE Cancellation tokens and pass them in all async methods to allow for graceful cancellation.

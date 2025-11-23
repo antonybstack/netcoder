@@ -1,9 +1,9 @@
-# Feature Specification: Interactive C# 13 Code Execution PoC (Backend-first)
+# Feature Specification: Interactive C# 14 Code Execution PoC (Backend-first)
 
 **Feature Branch**: `001-build-a-proof`  
 **Created**: 2025-09-28  
 **Status**: Draft  
-**Input**: User description: "Build a proof of concept, where the angular frontend client has a code editor interface for writing the latest version of C# 13 code, which can send the code to a back .net 9 backend API that will compile and build this code, execute it, and return the output. For example, the user should be able to write Console.WriteLine(\"Hello, world!\");, which the server will return the output Hello, world!, and the client should be displayed this output. Do a backend first approach."
+**Input**: User description: "Build a proof of concept, where the angular frontend client has a code editor interface for writing the latest version of C# 14 code, which can send the code to a back .net 10 backend API that will compile and build this code, execute it, and return the output. For example, the user should be able to write Console.WriteLine(\"Hello, world!\");, which the server will return the output Hello, world!, and the client should be displayed this output. Do a backend first approach."
 
 ## Execution Flow (main)
 
@@ -74,7 +74,7 @@ When creating this spec from a user prompt:
 
 ### Primary User Story
 
-As a prospective user evaluating the platform, I want to type a short C# 13 snippet in a browser and run it, so I can immediately see the program output returned from the server.
+As a prospective user evaluating the platform, I want to type a short C# 14 snippet in a browser and run it, so I can immediately see the program output returned from the server.
 
 ### Acceptance Scenarios
 
@@ -99,7 +99,7 @@ As a prospective user evaluating the platform, I want to type a short C# 13 snip
 - **FR-001**: Users MUST be able to enter and edit C# code in a browser.
 - **FR-002**: Users MUST be able to initiate execution of the entered code via a clear control (e.g., Run button or shortcut).
 - **FR-003**: The system MUST submit the code to the server and return the program's standard output and standard error.
-- **FR-004**: The system MUST support C# 13 language features and .NET 9 runtime semantics for this proof of concept.
+- **FR-004**: The system MUST support C# 14 language features and .NET 10 runtime semantics for this proof of concept.
 - **FR-005**: The system MUST surface compile-time diagnostics (errors and warnings) with messages and approximate locations within the submitted code.
 - **FR-006**: The system MUST enforce a 10-second execution time limit for each run and report a timeout outcome when exceeded.
 - **FR-007**: The system MUST clearly differentiate outcomes: Success, Compile Error, Runtime Error, Timeout, and Network/Error states.
@@ -159,11 +159,11 @@ Updated by main() during processing
 
 ## Technical Context
 
-**Language/Version**: C# 13 (server-side execution), .NET 9 runtime; Browser-based UI built with a modern web framework already present in the repo (frontend).  
+**Language/Version**: C# 14 (server-side execution), .NET 10 runtime; Browser-based UI built with a modern web framework already present in the repo (frontend).  
 **Primary Dependencies**: Monaco Editor (latest) for the UI code editor; server-side compilation/execution mechanism selection remains abstract for PoC planning.  
 **Storage**: N/A for PoC (no persistence of code or results).  
 **Testing**: Backend unit and integration tests for compile errors and success cases.
-**Target Platform**: Web client with a server process capable of compiling and executing C# 13 code.  
+**Target Platform**: Web client with a server process capable of compiling and executing C# 14 code.  
 **Project Type**: Web (client-server).  
 **Performance Goals**: For the canonical "Hello, world!" run, end-to-end time (submit → output displayed) p95 ≤ 2s on a developer machine.  
 **Constraints**: Execution timeout = 10s; output limit = 1 MB; submission size ≤ 1 MB; per-client concurrency: unlimited (throttling deferred); Security posture: no sandbox restrictions; trusted internal-only; not for public exposure.  

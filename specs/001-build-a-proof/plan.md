@@ -1,4 +1,4 @@
-# Implementation Plan: Interactive C# 13 Code Execution PoC (Backend-first)
+# Implementation Plan: Interactive C# 14 Code Execution PoC (Backend-first)
 
 **Branch**: `001-build-a-proof` | **Date**: 2025-09-28 | **Spec**: specs/001-build-a-proof/spec.md  
 **Input**: Feature specification from `/specs/001-build-a-proof/spec.md`
@@ -28,11 +28,11 @@
 
 ## Summary
 
-Enable a PoC where users type short C# 13 snippets in a browser and execute them on a backend, returning stdout/stderr and diagnostics. Backend-first approach: provide a single HTTP endpoint that accepts code and returns an execution result. For the PoC, no sandbox and internal-only. Constraints: 10s timeout, 1 MB max code, 1 MB max output, unlimited per-client concurrency.
+Enable a PoC where users type short C# 14 snippets in a browser and execute them on a backend, returning stdout/stderr and diagnostics. Backend-first approach: provide a single HTTP endpoint that accepts code and returns an execution result. For the PoC, no sandbox and internal-only. Constraints: 10s timeout, 1 MB max code, 1 MB max output, unlimited per-client concurrency.
 
 ## Technical Context
 
-**Language/Version**: Backend: C# 13 on .NET 9 (current repo); Frontend: Angular 20  
+**Language/Version**: Backend: C# 14 on .NET 10 (current repo); Frontend: Angular 21  
 **Primary Dependencies**: Roslyn C# Scripting (Microsoft.CodeAnalysis.CSharp.Scripting); Angular Resource API for HTTP; Tailwind v4 + daisyUI for UI  
 **Storage**: N/A (no persistence in PoC)  
 **Testing**: Backend: xUnit integration/contract tests
@@ -46,7 +46,7 @@ Enable a PoC where users type short C# 13 snippets in a browser and execute them
 
 - Runtime & Networking: Internal HTTP between frontend and backend only; no outbound external calls. For production, TLS terminates at edge (e.g., Cloudflare Tunnel). Payloads are single JSON request/response; no batching needed.
 - Environment configuration: Development uses launch profile binding to <http://localhost:5189> (backend). Production to be containerised with separate host port mappings; health/metrics endpoints to be namespaced.
-- Technology Alignment: Frontend will use Angular 20 zoneless and Resource API for HTTP; Tailwind v4/daisyUI for styling. Backend uses .NET 9.
+- Technology Alignment: Frontend will use Angular 21 zoneless and Resource API for HTTP; Tailwind v4/daisyUI for styling. Backend uses .NET 10.
 - Frontend HTTP API handling: Will use Angular Resource API; RxJS HttpClient patterns prohibited.
 - Tests & Quality Gates: Plan includes backend xUnit integration and contract tests. Performance testing not required beyond stated goal.
 - Observability: Structured logs with correlation ID (requestId), durationMs, outcome; minimal metrics surface planned for later.
@@ -127,9 +127,9 @@ Unchanged from template.
 
 ## Complexity Tracking
 
-| Violation                   | Why Needed                           | Simpler Alternative Rejected Because          |
-| --------------------------- | ------------------------------------ | --------------------------------------------- |
-| Backend uses .NET 9 (vs 10) | Aligns with existing repo; PoC speed | Immediate migration adds time without benefit |
+| Violation                    | Why Needed                           | Simpler Alternative Rejected Because          |
+| ---------------------------- | ------------------------------------ | --------------------------------------------- |
+| Backend uses .NET 10 (vs 10) | Aligns with existing repo; PoC speed | Immediate migration adds time without benefit |
 
 ## Progress Tracking
 
