@@ -41,3 +41,15 @@ Content-Type: application/json
   "lineNumber": "1",
   "column": "1"
 }
+
+POST http://localhost:5189/hubs/intellisense/negotiate?negotiateVersion=1
+Content-Type: application/json
+
+
+### SignalR Hub w/ postman
+// new "WebSocket"
+// "localhost:5189/hubs/intellisense"
+// first message:
+// {"protocol": "json","version": 1}
+// second message:
+// {"type":1,"target":"requestCompletions","arguments":[{"doc": {"sessionId":"91d152f3bd4644db98dfd66e9cad5dc9","languageVersion":"C#14"},"text":{"content":"Guid.","cursorOffset":5}}]}

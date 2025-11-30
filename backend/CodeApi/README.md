@@ -32,4 +32,7 @@
 ### Decompiler
 
 - https://github.com/dotnet/interactive/blob/main/src/Microsoft.DotNet.Interactive.ExtensionLab/Inspector/JitAsmDecompiler/JitAsmDecompiler.cs
-- 
+
+### Shared Session
+
+- https://learn.microsoft.com/en-us/aspnet/core/signalr/groups?view=aspnetcore-10.0#groups-in-signalr
