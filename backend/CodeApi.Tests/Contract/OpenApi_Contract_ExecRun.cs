@@ -8,12 +8,12 @@ public class OpenApi_Contract_ExecRun
     [Fact]
     public async Task Response_Has_Required_Fields()
     {
-        await using var factory = new WebApplicationFactory<Program>();
-        using var client = factory.CreateClient();
+        await using WebApplicationFactory<Program> factory = new WebApplicationFactory<Program>();
+        using HttpClient client = factory.CreateClient();
         var payload = new { code = "Console.WriteLine(\"x\");" };
-        var response = await client.PostAsJsonAsync("/api/exec/run", payload);
+        HttpResponseMessage response = await client.PostAsJsonAsync("/api/exec/run", payload);
         response.EnsureSuccessStatusCode();
-        var json = await response.Content.ReadFromJsonAsync<JsonObject>();
+        JsonObject? json = await response.Content.ReadFromJsonAsync<JsonObject>();
         Assert.NotNull(json);
         Assert.True(json!.ContainsKey("outcome"));
         Assert.True(json.ContainsKey("stdout"));
@@ -28,10 +28,10 @@ public class OpenApi_Contract_ExecRun
         Assert.IsType<int>(json["durationMs"]!.GetValue<int>());
         Assert.IsType<bool>(json["truncated"]!.GetValue<bool>());
 
-        var diagnostics = json["diagnostics"]!.AsArray();
-        foreach (var diagnosticNode in diagnostics)
+        JsonArray diagnostics = json["diagnostics"]!.AsArray();
+        foreach (JsonNode? diagnosticNode in diagnostics)
         {
-            var diagnostic = diagnosticNode!.AsObject();
+            JsonObject diagnostic = diagnosticNode!.AsObject();
             Assert.True(diagnostic.ContainsKey("id"));
             Assert.True(diagnostic.ContainsKey("severity"));
             Assert.True(diagnostic.ContainsKey("message"));

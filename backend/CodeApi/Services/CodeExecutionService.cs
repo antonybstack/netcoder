@@ -1,18 +1,19 @@
-using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using CodeApi.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
+using Diagnostic = Microsoft.CodeAnalysis.Diagnostic;
 using ModelDiagnostic = CodeApi.Models.Diagnostic;
 
 namespace CodeApi.Services;
+
+public interface ICodeExecutionService
+{
+    Task<ExecutionResult> ExecuteAsync(string code, CancellationToken ct);
+}
 
 public class CodeExecutionService : ICodeExecutionService
 {
@@ -34,7 +35,7 @@ public class CodeExecutionService : ICodeExecutionService
 
     private static readonly Lazy<IReadOnlyList<MetadataReference>> MetadataReferences = new(() =>
     {
-        var trusted = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string ?? string.Empty;
+        string trusted = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string ?? string.Empty;
         return trusted
             .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)
             .Select(path => MetadataReference.CreateFromFile(path))
@@ -49,19 +50,19 @@ public class CodeExecutionService : ICodeExecutionService
     {
         await Gate.WaitAsync(ct).ConfigureAwait(false);
 
-        var stdoutWriter = new BoundedStringWriter(OutputLimit);
-        var stderrWriter = new BoundedStringWriter(OutputLimit);
-        var stopwatch = Stopwatch.StartNew();
+        BoundedStringWriter stdoutWriter = new BoundedStringWriter(OutputLimit);
+        BoundedStringWriter stderrWriter = new BoundedStringWriter(OutputLimit);
+        Stopwatch stopwatch = Stopwatch.StartNew();
 
-        var originalOut = Console.Out;
-        var originalErr = Console.Error;
-        var consoleRedirected = false;
+        TextWriter originalOut = Console.Out;
+        TextWriter originalErr = Console.Error;
+        bool consoleRedirected = false;
 
         try
         {
-            var script = CSharpScript.Create(code, ScriptOptions.WithFilePath("UserSubmission.csx"));
-            var diagnostics = script.Compile();
-            var errors = diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error).ToList();
+            Script<object>? script = CSharpScript.Create(code, ScriptOptions.WithFilePath("UserSubmission.csx"));
+            ImmutableArray<Diagnostic> diagnostics = script.Compile();
+            List<Diagnostic> errors = diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error).ToList();
             if (errors.Count > 0)
             {
                 return BuildResult(Outcome.CompileError, stdoutWriter, stderrWriter, stopwatch.ElapsedMilliseconds, false, errors.Select(MapDiagnostic));
@@ -71,10 +72,10 @@ public class CodeExecutionService : ICodeExecutionService
             Console.SetError(stderrWriter);
             consoleRedirected = true;
 
-            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            var runTask = script.RunAsync(cancellationToken: timeoutCts.Token);
-            var timeoutTask = Task.Delay(TimeoutMs, ct);
-            var completedTask = await Task.WhenAny(runTask, timeoutTask).ConfigureAwait(false);
+            using CancellationTokenSource timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            Task<ScriptState<object>>? runTask = script.RunAsync(cancellationToken: timeoutCts.Token);
+            Task timeoutTask = Task.Delay(TimeoutMs, ct);
+            Task completedTask = await Task.WhenAny(runTask, timeoutTask).ConfigureAwait(false);
             if (completedTask != runTask)
             {
                 if (ct.IsCancellationRequested)
@@ -120,12 +121,12 @@ public class CodeExecutionService : ICodeExecutionService
 
     private static ModelDiagnostic MapDiagnostic(Microsoft.CodeAnalysis.Diagnostic diagnostic)
     {
-        var location = diagnostic.Location;
-        var line = 0;
-        var column = 0;
+        Location location = diagnostic.Location;
+        int line = 0;
+        int column = 0;
         if (location.IsInSource)
         {
-            var span = location.GetLineSpan();
+            FileLinePositionSpan span = location.GetLineSpan();
             line = span.StartLinePosition.Line + 1;
             column = span.StartLinePosition.Character + 1;
         }
@@ -198,14 +199,14 @@ public class CodeExecutionService : ICodeExecutionService
                 return;
             }
 
-            var remaining = Math.Max(0, _limit - _buffer.Length);
+            int remaining = Math.Max(0, _limit - _buffer.Length);
             if (remaining <= 0)
             {
                 IsTruncated = true;
                 return;
             }
 
-            var sliceCount = Math.Min(count, remaining);
+            int sliceCount = Math.Min(count, remaining);
             _buffer.Append(buffer, index, sliceCount);
             if (sliceCount < count)
             {
@@ -215,7 +216,7 @@ public class CodeExecutionService : ICodeExecutionService
 
         public override void Write(ReadOnlySpan<char> buffer)
         {
-            var remaining = Math.Max(0, _limit - _buffer.Length);
+            int remaining = Math.Max(0, _limit - _buffer.Length);
             if (remaining <= 0)
             {
                 IsTruncated = true;
@@ -240,7 +241,7 @@ public class CodeExecutionService : ICodeExecutionService
                 return;
             }
 
-            var remaining = Math.Max(0, _limit - _buffer.Length);
+            int remaining = Math.Max(0, _limit - _buffer.Length);
             if (remaining <= 0)
             {
                 IsTruncated = true;

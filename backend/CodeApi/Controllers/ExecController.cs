@@ -43,7 +43,7 @@ public class ExecController : ControllerBase
         submission.SubmittedAt = DateTime.UtcNow;
         submission.RequestId ??= HttpContext.TraceIdentifier;
 
-        var result = await _service.ExecuteAsync(submission.Code, HttpContext.RequestAborted);
+        ExecutionResult result = await _service.ExecuteAsync(submission.Code, HttpContext.RequestAborted);
         _logger.LogInformation(
             "Execution completed for {RequestId} with {Outcome} in {DurationMs}ms",
             submission.RequestId,

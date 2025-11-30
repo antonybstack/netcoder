@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace CodeApi.Models;
 
 public enum Outcome

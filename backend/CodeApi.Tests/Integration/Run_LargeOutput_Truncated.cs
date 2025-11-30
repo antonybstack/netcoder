@@ -8,16 +8,16 @@ public class Run_LargeOutput_Truncated
     [Fact]
     public async Task Should_Truncate_Output_At_1MB()
     {
-        await using var factory = new WebApplicationFactory<Program>();
-        using var client = factory.CreateClient();
+        await using WebApplicationFactory<Program> factory = new WebApplicationFactory<Program>();
+        using HttpClient client = factory.CreateClient();
         var payload = new { code = "Console.Write(new string('a', 1100000));" };
-        var response = await client.PostAsJsonAsync("/api/exec/run", payload);
+        HttpResponseMessage response = await client.PostAsJsonAsync("/api/exec/run", payload);
         response.EnsureSuccessStatusCode();
-        var json = await response.Content.ReadFromJsonAsync<JsonObject>();
+        JsonObject? json = await response.Content.ReadFromJsonAsync<JsonObject>();
         Assert.NotNull(json);
         Assert.Equal("Success", json!["outcome"]!.GetValue<string>());
         Assert.True(json!["truncated"]!.GetValue<bool>());
-        var stdout = json["stdout"]!.GetValue<string>();
+        string stdout = json["stdout"]!.GetValue<string>();
         Assert.Equal(1_048_576, stdout.Length);
         Assert.Equal(string.Empty, json["stderr"]!.GetValue<string>());
         Assert.Empty(json["diagnostics"]!.AsArray());

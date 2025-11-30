@@ -32,4 +32,12 @@ Content-Type: application/json
   "code": "Console.Write(new string('a', 1100000));"
 }
 
-###
+### Syntax Error
+POST {{CodeApi_HostAddress}}/api/completions/
+Content-Type: application/json
+
+{
+  "code": "Console.WriteLine(\"OOPS\");",
+  "lineNumber": "1",
+  "column": "1"
+}

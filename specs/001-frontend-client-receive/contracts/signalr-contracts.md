@@ -35,6 +35,12 @@
 - `diagnosticsUpdated`: `{ diagnostics: Diagnostic[] }`
 - `hoverInfo`: `HoverInfo`
 - `signatureHelp`: `SignatureHelp`
-- `statusChanged`: `{ status: 'connected' | 'reconnecting' | 'disconnected' }`
+- `statusChanged`: `{ status: 'connected' | 'reconnecting' | 'disconnected' | 'error', localOnly: boolean, message?: string }`
+
+> Notes
+>
+> - `statusChanged` is emitted on connect, fallback/reconnect, and failures so the UI can present realtime status + local-only mode.
+> - Diagnostic ranges are byte offsets into the submitted text to avoid line/column drift.
+> - `requestHover`/`requestSignatureHelp` rely on the most recent `TextState` submitted alongside completions/diagnostics for the session.
 
 (Types `CompletionItem`, `Diagnostic`, `HoverInfo`, `SignatureHelp` align with data-model.md)

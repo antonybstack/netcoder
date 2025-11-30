@@ -8,12 +8,12 @@ public class Run_InfiniteLoop_TimesOut
     [Fact]
     public async Task Should_Timeout()
     {
-        await using var factory = new WebApplicationFactory<Program>();
-        using var client = factory.CreateClient();
+        await using WebApplicationFactory<Program> factory = new WebApplicationFactory<Program>();
+        using HttpClient client = factory.CreateClient();
         var payload = new { code = "await Task.Delay(11000);" };
-        var response = await client.PostAsJsonAsync("/api/exec/run", payload);
+        HttpResponseMessage response = await client.PostAsJsonAsync("/api/exec/run", payload);
         response.EnsureSuccessStatusCode();
-        var json = await response.Content.ReadFromJsonAsync<JsonObject>();
+        JsonObject? json = await response.Content.ReadFromJsonAsync<JsonObject>();
         Assert.NotNull(json);
         Assert.Equal("Timeout", json!["outcome"]!.GetValue<string>());
         Console.WriteLine(json["durationMs"]!.GetValue<int>());

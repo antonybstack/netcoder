@@ -1,5 +1,14 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, signal } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  OnDestroy,
+  ViewChild,
+  inject,
+  signal,
+} from '@angular/core';
 import { createExecApi, ExecutionResult } from '../../services/api.service';
+import { IntellisenseService } from '../../services/intellisense.service';
 import 'monaco-editor/esm/vs/basic-languages/csharp/csharp.contribution';
 
 type MonacoModule = typeof import('monaco-editor/esm/vs/editor/editor.api');
@@ -68,7 +77,15 @@ export class CodePage implements AfterViewInit, OnDestroy {
   results = signal<ExecutionResult[]>([]);
   inflight = signal(0);
   api = createExecApi('');
+  private readonly intellisense = inject(IntellisenseService);
+  status = this.intellisense.status;
+  completions = this.intellisense.completions;
+  diagnosticsFeed = this.intellisense.diagnostics;
+  hoverInfo = this.intellisense.hoverInfo;
+  signatureHelp = this.intellisense.signatureHelp;
   private editor: MonacoEditor | null = null;
+  private syncHandle: number | undefined;
+  private hoverHandle: number | undefined;
 
   @ViewChild('editor', { static: true }) private editorElement?: ElementRef<HTMLDivElement>;
 
@@ -93,10 +110,35 @@ export class CodePage implements AfterViewInit, OnDestroy {
       }
 
       this.code.set(this.editor.getValue());
+      this.scheduleSync();
     });
+
+    this.editor.onDidChangeCursorPosition((e) => {
+      if (!this.editor) {
+        return;
+      }
+
+      const model = this.editor.getModel();
+      if (!model) {
+        return;
+      }
+
+      const offset = model.getOffsetAt(e.position);
+      this.scheduleHover(offset);
+    });
+
+    void this.intellisense.connect();
   }
 
   ngOnDestroy(): void {
+    if (this.syncHandle) {
+      clearTimeout(this.syncHandle);
+      this.syncHandle = undefined;
+    }
+    if (this.hoverHandle) {
+      clearTimeout(this.hoverHandle);
+      this.hoverHandle = undefined;
+    }
     this.editor?.dispose();
     this.editor = null;
   }
@@ -115,5 +157,37 @@ export class CodePage implements AfterViewInit, OnDestroy {
 
   clear() {
     this.results.set([]);
+  }
+
+  private scheduleSync() {
+    if (this.syncHandle) {
+      clearTimeout(this.syncHandle);
+    }
+
+    this.syncHandle = window.setTimeout(() => {
+      if (!this.editor) {
+        return;
+      }
+      const model = this.editor.getModel();
+      if (!model) {
+        return;
+      }
+
+      const position = this.editor.getPosition();
+      const cursorOffset = position ? model.getOffsetAt(position) : this.code().length;
+      const text = this.editor.getValue();
+      void this.intellisense.updateText(text, cursorOffset);
+    }, 120);
+  }
+
+  private scheduleHover(offset: number) {
+    if (this.hoverHandle) {
+      clearTimeout(this.hoverHandle);
+    }
+
+    this.hoverHandle = window.setTimeout(() => {
+      void this.intellisense.requestHover(offset);
+      void this.intellisense.requestSignatureHelp(offset);
+    }, 160);
   }
 }

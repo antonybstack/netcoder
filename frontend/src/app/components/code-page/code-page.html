@@ -5,9 +5,18 @@
         <button class="btn btn-primary" type="button" (click)="run()">Run</button>
         <button class="btn btn-outline" type="button" (click)="clear()">Clear History</button>
       </div>
-      @if (inflight() > 0) {
-      <span class="badge badge-info badge-outline animate-pulse">Running ({{ inflight() }})</span>
-      }
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="badge badge-secondary">
+          Intellisense:
+          <strong class="ml-1 capitalize">{{ status().status }}</strong>
+        </span>
+        @if (status().localOnly) {
+        <span class="badge badge-warning badge-outline">local-only</span>
+        }
+        @if (inflight() > 0) {
+        <span class="badge badge-info badge-outline animate-pulse">Running ({{ inflight() }})</span>
+        }
+      </div>
     </header>
     <div class="rounded-2xl border border-base-300 bg-base-200/60 p-2 shadow-inner">
       <div
@@ -16,6 +25,75 @@
         class="code-editor rounded-xl bg-base-200/40"
       ></div>
     </div>
+  </section>
+
+  <section class="grid gap-4 lg:grid-cols-3">
+    <article class="card bg-base-100 shadow">
+      <div class="card-body space-y-2">
+        <h3 class="card-title text-base">Realtime Status</h3>
+        <p class="text-sm text-base-content/70">
+          {{ status().message || 'Listening for completions, diagnostics, hover, and signature help events.' }}
+        </p>
+        <div>
+          <p class="text-xs uppercase text-base-content/60">Last completions</p>
+          @if (completions().length === 0) {
+          <p class="text-sm text-base-content/60">Waiting for input…</p>
+          } @else {
+          <ul class="space-y-1 text-sm">
+            @for (item of completions().slice(0, 4); track item.label) {
+            <li class="flex items-center justify-between gap-2">
+              <span class="font-mono text-xs text-primary">{{ item.label }}</span>
+              <span class="text-xs text-base-content/60">{{ item.detail || item.kind }}</span>
+            </li>
+            }
+          </ul>
+          }
+        </div>
+      </div>
+    </article>
+
+    <article class="card bg-base-100 shadow">
+      <div class="card-body space-y-2">
+        <h3 class="card-title text-base">Diagnostics</h3>
+        @if (diagnosticsFeed().length === 0) {
+        <p class="text-sm text-base-content/60">No diagnostics yet.</p>
+        } @else {
+        <ul class="space-y-1">
+          @for (diag of diagnosticsFeed(); track diag.code + diag.range.start) {
+          <li class="rounded-lg border border-base-200 p-2 text-sm">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold">{{ diag.severity }}</span>
+              <span class="text-xs text-base-content/60">L{{ diag.range.start }}-{{ diag.range.end }}</span>
+            </div>
+            <p class="text-base-content/80">{{ diag.message }}</p>
+          </li>
+          }
+        </ul>
+        }
+      </div>
+    </article>
+
+    <article class="card bg-base-100 shadow">
+      <div class="card-body space-y-2">
+        <h3 class="card-title text-base">Hover &amp; Signature</h3>
+        @if (hoverInfo()) {
+        <div class="rounded-lg bg-base-200/60 p-2 text-sm">
+          <p class="font-mono text-xs whitespace-pre-wrap">{{ hoverInfo()!.contents }}</p>
+        </div>
+        } @else {
+        <p class="text-sm text-base-content/60">Move the caret over a symbol to view hover info.</p>
+        }
+
+        @if (signatureHelp()) {
+        <div class="rounded-lg border border-base-200 p-2 text-sm">
+          <p class="font-semibold">{{ signatureHelp()!.signatures[signatureHelp()!.activeSignature]?.label }}</p>
+          <p class="text-xs text-base-content/60">
+            Active parameter: {{ signatureHelp()!.activeParameter + 1 }}
+          </p>
+        </div>
+        }
+      </div>
+    </article>
   </section>
 
   <section class="space-y-4">
