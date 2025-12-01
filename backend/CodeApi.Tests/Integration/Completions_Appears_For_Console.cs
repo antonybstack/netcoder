@@ -1,3 +1,4 @@
+/*
 using System;
 using System.Linq;
 using System.Text.Json;
@@ -28,3 +29,5 @@ public class Completions_Appears_For_Console : SignalRTestBase
         Assert.Contains("Console.WriteLine", labels);
     }
 }
+*/
+

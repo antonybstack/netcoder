@@ -3,11 +3,11 @@ using System.Text.Json.Serialization;
 using CodeApi.Hubs;
 using CodeApi.Services;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers().AddJsonOptions(o =>
 {
-    var jsonOptions = o.JsonSerializerOptions;
+    JsonSerializerOptions jsonOptions = o.JsonSerializerOptions;
     jsonOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     jsonOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
     jsonOptions.Converters.Add(new JsonStringEnumConverter());
@@ -37,7 +37,7 @@ if (builder.Environment.IsDevelopment())
     });
 }
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {

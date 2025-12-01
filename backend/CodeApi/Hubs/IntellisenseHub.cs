@@ -5,12 +5,51 @@ using CodeApi.Models.Intellisense;
 using CodeApi.Models.Intellisense.Requests;
 using CodeApi.Services;
 using Microsoft.AspNetCore.SignalR;
+using TypedSignalR.Client;
 
 namespace CodeApi.Hubs;
 
-public partial class IntellisenseHub(IRoslynCompletionService service, ILogger<IntellisenseHub> logger) : Hub
+[Hub]
+public interface IIntellisenseHub
 {
-    public const string CompletionsResponseMethod = "completions";
+    // Task OnConnectedAsync();
+    // Task OnDisconnectedAsync(Exception? exception);
+    // Task RequestDiagnostics(IntellisenseTextRequest payload);
+    // Task RequestHover(IntellisensePositionRequest payload);
+    // Task RequestSignatureHelp(IntellisensePositionRequest payload);
+}
+
+[Receiver]
+public interface IIntellisenseReceiver
+{
+    // Task OnConnectedAsync();
+    // Task OnDisconnectedAsync(Exception? exception);
+    [HubMethodName("RequestCompletions")]
+    Task RequestCompletions(IntellisenseTextRequest payload);
+    // Task RequestDiagnostics(IntellisenseTextRequest payload);
+    // Task RequestHover(IntellisensePositionRequest payload);
+    // Task RequestSignatureHelp(IntellisensePositionRequest payload);
+}
+
+public interface IIntellisenseSender
+{
+    // Task OnConnectedAsync();
+    // Task OnDisconnectedAsync(Exception? exception);
+    [HubMethodName("Completions")]
+    Task Completions(CompletionsResponse response);
+
+    Task StatusChanged(object status, CancellationToken ct);
+    // Task RequestDiagnostics(IntellisenseTextRequest payload);
+    // Task RequestHover(IntellisensePositionRequest payload);
+    // Task RequestSignatureHelp(IntellisensePositionRequest payload);
+}
+
+public partial class IntellisenseHub(
+    IRoslynCompletionService service,
+    ILogger<IntellisenseHub> logger)
+    : Hub<IIntellisenseSender>, IIntellisenseReceiver
+{
+    public const string CompletionsResponseMethod = nameof(IIntellisenseSender.Completions);
     private static readonly ConcurrentDictionary<string, SessionEntry> SessionTexts = new();
     private static readonly ConcurrentDictionary<string, DebounceState> DebounceStates = new();
     private static readonly TimeSpan DebounceWindow = TimeSpan.FromMilliseconds(35);
@@ -19,6 +58,7 @@ public partial class IntellisenseHub(IRoslynCompletionService service, ILogger<I
     private static readonly Counter<long> DisconnectionsCounter = HubMeter.CreateCounter<long>("intellisense_disconnections");
     private static readonly Histogram<double> RequestLatency = HubMeter.CreateHistogram<double>("intellisense_request_duration_ms");
 
+    private CancellationToken CancellationToken => Context.ConnectionAborted;
 
     public override Task OnConnectedAsync()
     {
@@ -39,9 +79,6 @@ public partial class IntellisenseHub(IRoslynCompletionService service, ILogger<I
         return Task.CompletedTask;
     }
 
-    // _ct helper method that retrieves Context.ConnectionAborted
-    private CancellationToken _ct => Context.ConnectionAborted;
-
     public async Task RequestCompletions(IntellisenseTextRequest payload)
     {
         if (!Validate(payload))
@@ -56,30 +93,33 @@ public partial class IntellisenseHub(IRoslynCompletionService service, ILogger<I
 
         TrackText(payload.Doc, payload.Text);
         string correlationId = Guid.NewGuid().ToString("N");
-        using var scope = BeginScope(payload.Doc.SessionId, correlationId);
+        using IDisposable scope = BeginScope(payload.Doc.SessionId, correlationId);
 
         await ExecuteWithMetricsAsync(CompletionsResponseMethod, async (ct) =>
         {
             try
             {
                 IReadOnlyList<AppCompletionItem> result = await service.GetCompletionsScript(payload.Text.Content, ct);
-                await Clients.Caller.SendAsync(CompletionsResponseMethod, new CompletionsResponse(result), ct);
-                await SendStatusAsync("connected", false, "Realtime service operational");
+                // await Clients.Caller.SendAsync(IntellisenseHub.CompletionsResponseMethod, new CompletionsResponse(result), ct);
+                CompletionsResponse response = new(result);
+                await Clients.Caller.Completions(response);
+                // await SendStatusAsync("connected", false, "Realtime service operational");
             }
             catch (IntellisenseUnavailableException ex)
             {
-                logger.LogWarning(ex, "Intellisense unavailable; sending local fallback");
-                await SendStatusAsync("reconnecting", true, ex.Message);
-                IReadOnlyList<AppCompletionItem> fallback = BuildLocalFallback(payload.Text);
-                await Clients.Caller.SendAsync(CompletionsResponseMethod, new CompletionsResponse(fallback), ct);
-                await SendStatusAsync("connected", false, "Realtime service restored");
+                logger.LogWarning(ex, "Intellisense unavailable");
+                // await SendStatusAsync("reconnecting", true, ex.Message);
+                // await Clients.Caller.Completions(new CompletionsResponse(, ct);
+                // await SendStatusAsync("connected", false, "Realtime service restored");
+                throw;
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, $"Failed to compute {CompletionsResponseMethod}");
                 await SendStatusAsync("error", false, $"Unable to provide {CompletionsResponseMethod}");
+                throw;
             }
-        }, _ct);
+        }, CancellationToken);
     }
 
     public async Task RequestDiagnostics(IntellisenseTextRequest payload)
@@ -96,7 +136,7 @@ public partial class IntellisenseHub(IRoslynCompletionService service, ILogger<I
 
         TrackText(payload.Doc, payload.Text);
         string correlationId = Guid.NewGuid().ToString("N");
-        using var scope = BeginScope(payload.Doc.SessionId, correlationId);
+        using IDisposable scope = BeginScope(payload.Doc.SessionId, correlationId);
 
         await ExecuteWithMetricsAsync("diagnostics", async (ct) =>
         {
@@ -109,7 +149,7 @@ public partial class IntellisenseHub(IRoslynCompletionService service, ILogger<I
                 logger.LogError(ex, "Failed to compute diagnostics");
                 await SendStatusAsync("error", false, "Unable to provide diagnostics");
             }
-        }, _ct);
+        }, CancellationToken);
     }
 
     public async Task RequestHover(IntellisensePositionRequest payload)
@@ -119,14 +159,14 @@ public partial class IntellisenseHub(IRoslynCompletionService service, ILogger<I
             return;
         }
 
-        if (!TryGetSessionText(payload.Doc, out var text))
+        if (!TryGetSessionText(payload.Doc, out TextState text))
         {
             await SendStatusAsync("error", false, "No document state available for hover");
             return;
         }
 
         string correlationId = Guid.NewGuid().ToString("N");
-        using var scope = BeginScope(payload.Doc.SessionId, correlationId);
+        using IDisposable scope = BeginScope(payload.Doc.SessionId, correlationId);
 
         await ExecuteWithMetricsAsync("hover", async (ct) =>
         {
@@ -139,7 +179,7 @@ public partial class IntellisenseHub(IRoslynCompletionService service, ILogger<I
                 logger.LogError(ex, "Failed to compute hover info");
                 await SendStatusAsync("error", false, "Unable to provide hover info");
             }
-        }, _ct);
+        }, CancellationToken);
     }
 
     public async Task RequestSignatureHelp(IntellisensePositionRequest payload)
@@ -149,14 +189,14 @@ public partial class IntellisenseHub(IRoslynCompletionService service, ILogger<I
             return;
         }
 
-        if (!TryGetSessionText(payload.Doc, out var text))
+        if (!TryGetSessionText(payload.Doc, out TextState text))
         {
             await SendStatusAsync("error", false, "No document state available for signature help");
             return;
         }
 
         string correlationId = Guid.NewGuid().ToString("N");
-        using var scope = BeginScope(payload.Doc.SessionId, correlationId);
+        using IDisposable scope = BeginScope(payload.Doc.SessionId, correlationId);
 
         await ExecuteWithMetricsAsync("signatureHelp", async (ct) =>
         {
@@ -169,7 +209,7 @@ public partial class IntellisenseHub(IRoslynCompletionService service, ILogger<I
                 logger.LogError(ex, "Failed to compute signature help");
                 await SendStatusAsync("error", false, "Unable to provide signature help");
             }
-        }, _ct);
+        }, CancellationToken);
     }
 
     private bool Validate(IntellisenseTextRequest? payload)
@@ -197,7 +237,7 @@ public partial class IntellisenseHub(IRoslynCompletionService service, ILogger<I
     private bool TryGetSessionText(DocumentRef doc, out TextState text)
     {
         text = new TextState();
-        if (SessionTexts.TryGetValue(doc.SessionId, out var entry) && entry.ConnectionId == Context.ConnectionId)
+        if (SessionTexts.TryGetValue(doc.SessionId, out SessionEntry? entry) && entry.ConnectionId == Context.ConnectionId)
         {
             text = entry.Text ?? new TextState();
             return true;
@@ -208,7 +248,7 @@ public partial class IntellisenseHub(IRoslynCompletionService service, ILogger<I
 
     private void TrackText(DocumentRef doc, TextState text)
     {
-        var snapshot = new TextState
+        TextState snapshot = new()
         {
             Content = text.Content ?? string.Empty,
             CursorOffset = text.CursorOffset
@@ -218,11 +258,11 @@ public partial class IntellisenseHub(IRoslynCompletionService service, ILogger<I
 
     private bool ShouldProcess(DocumentRef doc, TextState text)
     {
-        var state = DebounceStates.GetOrAdd(doc.SessionId, _ => new DebounceState());
+        DebounceState state = DebounceStates.GetOrAdd(doc.SessionId, _ => new DebounceState());
         int hash = HashCode.Combine(text.Content, text.CursorOffset);
         lock (state)
         {
-            var now = DateTime.UtcNow;
+            DateTime now = DateTime.UtcNow;
             if (state.Hash == hash && now - state.Timestamp < DebounceWindow)
             {
                 return false;
@@ -236,12 +276,12 @@ public partial class IntellisenseHub(IRoslynCompletionService service, ILogger<I
 
     private Task SendStatusAsync(string status, bool localOnly, string? message = null)
     {
-        return Clients.Caller.SendAsync("statusChanged", new
+        return Clients.Caller.StatusChanged(new
         {
             status,
             localOnly,
             message
-        }, _ct);
+        }, CancellationToken);
     }
 
     private IDisposable BeginScope(string sessionId, string correlationId)
@@ -256,23 +296,9 @@ public partial class IntellisenseHub(IRoslynCompletionService service, ILogger<I
         return logger.BeginScope(scope)!;
     }
 
-    private static IReadOnlyList<AppCompletionItem> BuildLocalFallback(TextState text)
-    {
-        return [];
-        //{
-        // new CustomCompletionItem()
-        // {
-        //     Label = "Console.WriteLine",
-        //     InsertText = "Console.WriteLine",
-        //     Kind = "method",
-        //     Detail = "Local fallback suggestion (syntax-only)"
-        // }
-        //};
-    }
-
     private async Task ExecuteWithMetricsAsync(string operation, Func<CancellationToken, Task> callback, CancellationToken cancellationToken)
     {
-        var stopwatch = Stopwatch.StartNew();
+        Stopwatch stopwatch = Stopwatch.StartNew();
         try
         {
             cancellationToken.ThrowIfCancellationRequested();

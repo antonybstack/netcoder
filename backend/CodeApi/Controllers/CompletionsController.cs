@@ -60,7 +60,7 @@ public class CompletionsController : ControllerBase
 
         try
         {
-            var sourceText = SourceText.From(request.Code);
+            SourceText sourceText = SourceText.From(request.Code);
 
             if (request.LineNumber > sourceText.Lines.Count || request.LineNumber < 1)
             {
@@ -68,7 +68,7 @@ public class CompletionsController : ControllerBase
                 return ValidationProblem(ModelState);
             }
 
-            var line = sourceText.Lines[request.LineNumber - 1];
+            TextLine line = sourceText.Lines[request.LineNumber - 1];
             int intraLineIndex = Math.Clamp(request.Column - 1, 0, line.Span.Length);
             int cursorPosition = Math.Clamp(line.Start + intraLineIndex, 0, sourceText.Length);
 

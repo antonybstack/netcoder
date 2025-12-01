@@ -1,14 +1,19 @@
+using System.Text.Json.Serialization;
 using CodeApi.Models.Intellisense;
 
 namespace CodeApi.Hubs;
 
-public partial class IntellisenseHub
+public class CompletionsResponse
 {
-    public record CompletionsResponse(IReadOnlyList<AppCompletionItem> items)
+    /*public CompletionsResponse()
     {
-        public override string ToString()
-        {
-            return $"{{ items = {items} }}";
-        }
+        Items = [];
+    }*/
+
+    public CompletionsResponse(IReadOnlyList<AppCompletionItem>? items)
+    {
+        Items = items?.ToList() ?? [];
     }
+
+    public IReadOnlyList<AppCompletionItem> Items { get; set; }
 }

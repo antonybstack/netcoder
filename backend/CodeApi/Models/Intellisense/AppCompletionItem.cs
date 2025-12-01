@@ -1,27 +1,44 @@
 namespace CodeApi.Models.Intellisense;
 
-public class AppCompletionItem(
-    string displayText,
-    string kind,
-    string filterText = null,
-    string sortText = null,
-    string insertText = null,
-    InsertTextFormat? insertTextFormat = null,
-    string documentation = null)
+public class AppCompletionItem
 {
-    public string DisplayText { get; } = displayText ?? throw new ArgumentNullException(nameof(displayText));
+    // Parameterless ctor required for System.Text.Json deserialization
+    public AppCompletionItem()
+    {
+    }
 
-    public string Kind { get; } = kind ?? throw new ArgumentException(nameof(kind));
+    // Preserve existing convenience ctor
+    public AppCompletionItem(
+        string displayText,
+        string kind,
+        string? filterText = null,
+        string? sortText = null,
+        string? insertText = null,
+        InsertTextFormat? insertTextFormat = null,
+        string? documentation = null)
+    {
+        DisplayText = displayText ?? throw new ArgumentNullException(nameof(displayText));
+        Kind = kind ?? throw new ArgumentException(nameof(kind));
+        FilterText = filterText;
+        SortText = sortText;
+        InsertText = insertText ?? displayText;
+        InsertTextFormat = insertTextFormat;
+        Documentation = documentation;
+    }
 
-    public string FilterText { get; } = filterText;
+    public string DisplayText { get; set; } = string.Empty;
 
-    public string SortText { get; } = sortText;
+    public string Kind { get; set; } = string.Empty;
 
-    public string InsertText { get; } = insertText ?? displayText;
+    public string? FilterText { get; set; }
 
-    public InsertTextFormat? InsertTextFormat { get; } = insertTextFormat;
+    public string? SortText { get; set; }
 
-    public string Documentation { get; set; } = documentation;
+    public string InsertText { get; set; } = string.Empty;
+
+    public InsertTextFormat? InsertTextFormat { get; set; }
+
+    public string? Documentation { get; set; }
 
     internal object? AssociatedSymbol { get; set; }
 

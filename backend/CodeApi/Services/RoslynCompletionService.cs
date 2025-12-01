@@ -32,38 +32,12 @@ public interface IRoslynCompletionService
 
 public sealed class RoslynCompletionService : IRoslynCompletionService
 {
-    private readonly AdhocWorkspace _workspace;
-    private readonly DocumentId _documentId;
+    private AdhocWorkspace _workspace;
+    private DocumentId _documentId;
 
     public RoslynCompletionService()
     {
-//         /*
-//          * Roslyn’s MEF services, as they are required to be populated for C# language services to work correctly.
-//
-//            The following assemblies are included in the default set:
-//            “Microsoft.CodeAnalysis.Workspaces”,
-//            “Microsoft.CodeAnalysis.CSharp.Workspaces”,
-//            “Microsoft.CodeAnalysis.VisualBasic.Workspaces”,
-//            “Microsoft.CodeAnalysis.Features”,
-//            “Microsoft.CodeAnalysis.CSharp.Features”,
-//            “Microsoft.CodeAnalysis.VisualBasic.Features”
-//          */
-        var host = MefHostServices.Create(MefHostServices.DefaultAssemblies);
-        _workspace = new AdhocWorkspace(host);
-
-        var projectInfo = ProjectInfo.Create(
-                ProjectId.CreateNewId(),
-                VersionStamp.Create(),
-                "Intellisense",
-                "Intellisense",
-                LanguageNames.CSharp)
-            .WithMetadataReferences(GetBaseReferences())
-            .WithCompilationOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
-                .WithUsings("System", "System.Collections.Generic", "System.Linq", "System.Threading.Tasks"))
-            .WithParseOptions(new CSharpParseOptions(LanguageVersion.Preview, DocumentationMode.Diagnose, SourceCodeKind.Script));
-
-        var project = _workspace.AddProject(projectInfo);
-        var document = _workspace.AddDocument(project.Id, "Script.cs", SourceText.From(string.Empty));
+        SetupWorkspace(string.Empty, false, out _workspace, out Document document);
         _documentId = document.Id;
     }
 
@@ -77,23 +51,23 @@ public sealed class RoslynCompletionService : IRoslynCompletionService
             return [];
         }
 
-        var document = UpsertDocumentWithText(code);
+        Document? document = UpsertDocumentWithText(code);
         if (document is null)
         {
             return [];
         }
 
-        var text = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
+        SourceText text = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
         int cursorPositionPotential = text.ToString().LastIndexOf(currentWord, StringComparison.Ordinal) + currentWord.Length;
         int cursorPosition = Math.Clamp(cursorPositionPotential, 0, text.Length);
 
-        var completionService = CompletionService.GetService(document);
+        CompletionService? completionService = CompletionService.GetService(document);
         if (completionService is null)
         {
             return [];
         }
 
-        var completionList = await completionService
+        CompletionList completionList = await completionService
             .GetCompletionsAsync(document, cursorPosition, cancellationToken: cancellationToken)
             .ConfigureAwait(false);
 
@@ -102,7 +76,7 @@ public sealed class RoslynCompletionService : IRoslynCompletionService
             return [];
         }
 
-        foreach (var i in completionList.ItemsList)
+        foreach (CompletionItem i in completionList.ItemsList)
         {
             Console.WriteLine(i.DisplayText);
 
@@ -122,9 +96,9 @@ public sealed class RoslynCompletionService : IRoslynCompletionService
         }
 
         List<AppCompletionItem> items = new(completionList.ItemsList.Count);
-        foreach (var item in completionList.ItemsList)
+        foreach (CompletionItem item in completionList.ItemsList)
         {
-            var change = await completionService
+            CompletionChange change = await completionService
                 .GetChangeAsync(document, item, cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
 
@@ -152,9 +126,9 @@ public sealed class RoslynCompletionService : IRoslynCompletionService
 
         Dictionary<(string, int), ISymbol> symbolToSymbolKey = new();
 
-        foreach (var symbol in symbols)
+        foreach (ISymbol symbol in symbols)
         {
-            var key = (symbol.Name, (int)symbol.Kind);
+            (string Name, int) key = (symbol.Name, (int)symbol.Kind);
             symbolToSymbolKey.TryAdd(key, symbol);
         }
 
@@ -186,31 +160,14 @@ public sealed class RoslynCompletionService : IRoslynCompletionService
             return [];
         }
 
-        var host = MefHostServices.Create(MefHostServices.DefaultAssemblies);
-        var workspace = new AdhocWorkspace(host);
+        // Consolidated script workspace/project/document setup
+        SetupWorkspace(code, true, out AdhocWorkspace workspace, out Document scriptDocument);
 
-        var compilationOptions = new CSharpCompilationOptions(
-            OutputKind.DynamicallyLinkedLibrary,
-            usings: ["System"]);
-
-        var scriptProjectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), VersionStamp.Create(), "Script", "Script", LanguageNames.CSharp, isSubmission: true)
-            .WithMetadataReferences([
-                MetadataReference.CreateFromFile(typeof(object).Assembly.Location)
-            ])
-            .WithCompilationOptions(compilationOptions);
-
-        var scriptProject = workspace.AddProject(scriptProjectInfo);
-        var scriptDocumentInfo = DocumentInfo.Create(
-            DocumentId.CreateNewId(scriptProject.Id), "Script",
-            sourceCodeKind: SourceCodeKind.Script,
-            loader: TextLoader.From(TextAndVersion.Create(SourceText.From(code), VersionStamp.Create())));
-        var scriptDocument = workspace.AddDocument(scriptDocumentInfo);
-
-        // cursor position is at the end
+        // the cursor position is at the end
         int position = (await scriptDocument.GetTextAsync(ct).ConfigureAwait(false)).Length;
 
-        var completionService = CompletionService.GetService(scriptDocument);
-        var completionList = await completionService.GetCompletionsAsync(scriptDocument, position, cancellationToken: ct);
+        CompletionService? completionService = CompletionService.GetService(scriptDocument);
+        CompletionList completionList = await completionService.GetCompletionsAsync(scriptDocument, position, cancellationToken: ct);
 
         /*foreach (var i in completionList.ItemsList)
         {
@@ -233,9 +190,9 @@ public sealed class RoslynCompletionService : IRoslynCompletionService
 
 
         List<AppCompletionItem> items = new(completionList.ItemsList.Count);
-        foreach (var item in completionList.ItemsList)
+        foreach (CompletionItem item in completionList.ItemsList)
         {
-            var change = await completionService
+            CompletionChange change = await completionService
                 .GetChangeAsync(scriptDocument, item, cancellationToken: ct)
                 .ConfigureAwait(false);
 
@@ -263,9 +220,9 @@ public sealed class RoslynCompletionService : IRoslynCompletionService
 
         Dictionary<(string, int), ISymbol> symbolToSymbolKey = new();
 
-        foreach (var symbol in symbols)
+        foreach (ISymbol symbol in symbols)
         {
-            var key = (symbol.Name, (int)symbol.Kind);
+            (string Name, int) key = (symbol.Name, (int)symbol.Kind);
             symbolToSymbolKey.TryAdd(key, symbol);
         }
 
@@ -298,13 +255,13 @@ public sealed class RoslynCompletionService : IRoslynCompletionService
             return [];
         }
 
-        var document = UpsertDocumentWithText(code);
+        Document? document = UpsertDocumentWithText(code);
         if (document is null)
         {
             return [];
         }
 
-        var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+        SemanticModel? semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
         if (semanticModel is null)
         {
             return [];
@@ -322,7 +279,7 @@ public sealed class RoslynCompletionService : IRoslynCompletionService
 
         return roslynDiagnostics.Select(d =>
         {
-            var span = d.Location.SourceSpan;
+            TextSpan span = d.Location.SourceSpan;
             return new AppDiagnostic
             {
                 Code = d.Id,
@@ -341,18 +298,18 @@ public sealed class RoslynCompletionService : IRoslynCompletionService
 
     private Document? UpsertDocumentWithText(string code)
     {
-        var document = _workspace.CurrentSolution.GetDocument(_documentId);
+        Document? document = _workspace.CurrentSolution.GetDocument(_documentId);
         return document?.WithText(SourceText.From(code));
     }
 
     private Document? GetDocumentWithText2(string code)
     {
-        var projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), VersionStamp.Create(), "MyProject", "MyProject", LanguageNames.CSharp).WithMetadataReferences(new[]
+        ProjectInfo projectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), VersionStamp.Create(), "MyProject", "MyProject", LanguageNames.CSharp).WithMetadataReferences(new[]
         {
             MetadataReference.CreateFromFile(typeof(object).Assembly.Location)
         });
-        var project = _workspace.AddProject(projectInfo);
-        var document = _workspace.AddDocument(project.Id, "MyFile.cs", SourceText.From(code));
+        Project? project = _workspace.AddProject(projectInfo);
+        Document? document = _workspace.AddDocument(project.Id, "MyFile.cs", SourceText.From(code));
         return document;
     }
 
@@ -407,6 +364,75 @@ public sealed class RoslynCompletionService : IRoslynCompletionService
             _ => "text"
         };
     }
+
+    public static void SetupWorkspace(string code, bool isScript, out AdhocWorkspace workspace, out Document document)
+    {
+        /* Roslyn’s MEF services, as they are required to be populated for C# language services to work correctly.
+          The following assemblies are included in the default set:
+          “Microsoft.CodeAnalysis.Workspaces”,
+          “Microsoft.CodeAnalysis.CSharp.Workspaces”,
+          “Microsoft.CodeAnalysis.VisualBasic.Workspaces”,
+          “Microsoft.CodeAnalysis.Features”,
+          “Microsoft.CodeAnalysis.CSharp.Features”,
+          “Microsoft.CodeAnalysis.VisualBasic.Features”
+          */
+        MefHostServices? host = MefHostServices.Create(MefHostServices.DefaultAssemblies);
+        workspace = new AdhocWorkspace(host);
+        CSharpCompilationOptions compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+            .WithUsings("System", "System.Collections.Generic", "System.Linq", "System.Threading.Tasks");
+
+        ProjectInfo projectInfo = ProjectInfo.Create(
+                ProjectId.CreateNewId(),
+                VersionStamp.Create(),
+                "Intellisense",
+                "Intellisense",
+                LanguageNames.CSharp,
+                isSubmission: isScript)
+            .WithMetadataReferences(GetBaseReferences())
+            .WithCompilationOptions(compilationOptions)
+            .WithParseOptions(new CSharpParseOptions(LanguageVersion.Preview, DocumentationMode.Diagnose, SourceCodeKind.Script));
+
+        Project? project = workspace.AddProject(projectInfo);
+        if (isScript)
+        {
+            DocumentInfo scriptDocumentInfo = DocumentInfo.Create(
+                DocumentId.CreateNewId(project.Id),
+                "Script.cs",
+                sourceCodeKind: SourceCodeKind.Script,
+                loader: TextLoader.From(TextAndVersion.Create(SourceText.From(code ?? string.Empty), VersionStamp.Create())));
+            document = workspace.AddDocument(scriptDocumentInfo);
+        }
+        else
+        {
+            document = workspace.AddDocument(
+                project.Id,
+                "Script.cs",
+                SourceText.From(code ?? string.Empty));
+        }
+    }
+
+    /*public static void SetupScriptWorkspace(out AdhocWorkspace workspace, out Document document, string? code)
+    {
+        MefHostServices? host = MefHostServices.Create(MefHostServices.DefaultAssemblies);
+        workspace = new AdhocWorkspace(host);
+
+        CSharpCompilationOptions compilationOptions = new(
+            OutputKind.DynamicallyLinkedLibrary,
+            usings: ["System"]);
+
+        ProjectInfo scriptProjectInfo = ProjectInfo.Create(ProjectId.CreateNewId(), VersionStamp.Create(), "Script", "Script", LanguageNames.CSharp, isSubmission: true)
+            .WithMetadataReferences([
+                MetadataReference.CreateFromFile(typeof(object).Assembly.Location)
+            ])
+            .WithCompilationOptions(compilationOptions);
+
+        Project? scriptProject = workspace.AddProject(scriptProjectInfo);
+        DocumentInfo scriptDocumentInfo = DocumentInfo.Create(
+            DocumentId.CreateNewId(scriptProject.Id), "Script",
+            sourceCodeKind: SourceCodeKind.Script,
+            loader: TextLoader.From(TextAndVersion.Create(SourceText.From(code), VersionStamp.Create())));
+        document = workspace.AddDocument(scriptDocumentInfo);
+    }*/
 }
 
 internal static class CompletionExtensions
@@ -464,9 +490,9 @@ internal static class CompletionExtensions
         public AppCompletionItem ToModel(Dictionary<(string, int), ISymbol> recommendedSymbols,
             Document document)
         {
-            var documentation = GetDocumentation(completionItem, recommendedSymbols, document);
+            ISymbol documentation = GetDocumentation(completionItem, recommendedSymbols, document);
 
-            var symbol = GetCompletionSymbolAsync(completionItem, recommendedSymbols, document);
+            ISymbol? symbol = GetCompletionSymbolAsync(completionItem, recommendedSymbols, document);
 
             return new AppCompletionItem(
                 completionItem.DisplayText,
@@ -481,7 +507,7 @@ internal static class CompletionExtensions
         public ISymbol GetDocumentation(Dictionary<(string, int), ISymbol> recommendedSymbols,
             Document document)
         {
-            var symbol = GetCompletionSymbolAsync(completionItem, recommendedSymbols, document);
+            ISymbol? symbol = GetCompletionSymbolAsync(completionItem, recommendedSymbols, document);
 
             if (symbol is not null)
             {
@@ -501,7 +527,7 @@ internal static class CompletionExtensions
         if (provider == SymbolCompletionProvider)
         {
             ImmutableDictionary<string, string> properties = completionItem.Properties;
-            if (recommendedSymbols.TryGetValue((properties[SymbolName], int.Parse(properties[nameof(SymbolKind)])), out var symbol))
+            if (recommendedSymbols.TryGetValue((properties[SymbolName], int.Parse(properties[nameof(SymbolKind)])), out ISymbol? symbol))
             {
                 // We were able to match this SymbolCompletionProvider item with a recommended symbol
                 return symbol;

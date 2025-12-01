@@ -1,8 +1,14 @@
 using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using CodeApi.Hubs;
+using CodeApi.Models.Intellisense;
+using CodeApi.Models.Intellisense.Requests;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit;
 
@@ -19,10 +25,10 @@ public abstract class SignalRTestBase : IClassFixture<WebApplicationFactory<Prog
         Factory = factory;
     }
 
-    protected async Task<HubConnection> CreateAndStartConnectionAsync()
+    protected async Task<HubConnection> CreateAndStartConnectionAsync(CancellationToken ct)
     {
-        var hubUrl = new Uri(Factory.Server.BaseAddress!, "/hubs/intellisense");
-        var connection = new HubConnectionBuilder()
+        Uri hubUrl = new(Factory.Server.BaseAddress!, "/hubs/intellisense");
+        HubConnection connection = new HubConnectionBuilder()
             .WithUrl(hubUrl, options =>
             {
                 options.HttpMessageHandlerFactory = _ => Factory.Server.CreateHandler();
@@ -39,10 +45,16 @@ public abstract class SignalRTestBase : IClassFixture<WebApplicationFactory<Prog
                 // This will set ALL logging to Debug level
                 logging.SetMinimumLevel(LogLevel.Debug);
             })
+            .AddJsonProtocol(options =>
+            {
+                options.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                options.PayloadSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+                options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            })
             .WithAutomaticReconnect()
             .Build();
 
-        await connection.StartAsync();
+        await connection.StartAsync(ct);
         return connection;
     }
 
@@ -70,6 +82,33 @@ public abstract class SignalRTestBase : IClassFixture<WebApplicationFactory<Prog
         {
             doc = BuildDoc(sessionId),
             text = BuildText(content, cursorOffset)
+        };
+    }
+
+    protected static IntellisenseTextRequest BuildIntellisenseTextRequest(string content, int? cursorOffset = null, string? sessionId = null)
+    {
+        return new IntellisenseTextRequest
+        {
+            Doc = BuildDocumentRef(sessionId),
+            Text = BuildTextState(content, cursorOffset)
+        };
+    }
+
+    protected static DocumentRef BuildDocumentRef(string? sessionId = null)
+    {
+        return new DocumentRef
+        {
+            SessionId = sessionId ?? Guid.NewGuid().ToString("N"),
+            LanguageVersion = "C#14"
+        };
+    }
+
+    protected static TextState BuildTextState(string content, int? cursorOffset = null)
+    {
+        return new TextState
+        {
+            Content = content,
+            CursorOffset = cursorOffset ?? content.Length
         };
     }
 
