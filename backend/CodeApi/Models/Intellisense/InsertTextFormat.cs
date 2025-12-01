@@ -1,8 +1,9 @@
-using System.Text.Json.Serialization;
+using Tapper;
 
 namespace CodeApi.Models.Intellisense;
 
 // [JsonConverter(typeof(JsonStringEnumConverter))]
+[TranspilationSource]
 public enum InsertTextFormat
 {
     PlainText = 1,

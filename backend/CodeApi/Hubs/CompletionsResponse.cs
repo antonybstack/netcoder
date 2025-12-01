@@ -1,8 +1,9 @@
-using System.Text.Json.Serialization;
 using CodeApi.Models.Intellisense;
+using Tapper;
 
 namespace CodeApi.Hubs;
 
+[TranspilationSource]
 public class CompletionsResponse
 {
     /*public CompletionsResponse()

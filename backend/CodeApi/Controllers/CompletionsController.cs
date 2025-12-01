@@ -1,8 +1,6 @@
-using System.Collections.Generic;
 using CodeApi.Models;
 using CodeApi.Models.Intellisense;
 using CodeApi.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Text;
 

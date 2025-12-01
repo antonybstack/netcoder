@@ -1,5 +1,8 @@
+using Tapper;
+
 namespace CodeApi.Models.Intellisense;
 
+[TranspilationSource]
 public class AppCompletionItem
 {
     // Parameterless ctor required for System.Text.Json deserialization
